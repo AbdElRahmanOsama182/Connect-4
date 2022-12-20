@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-//testing git
+#include <ctype.h>
+#include<conio.h>
+#define MAX_LEN 1000
 #define ROWS 6
 #define COLS 7
 typedef struct 
@@ -24,7 +26,6 @@ typedef struct
 Time timer;
 time_t time_start,time_end;
 char board[ROWS][COLS];
-char header[] = "ABCDEFGHIJKLMNOPQTVWXYabcdefghijklmnopqtvwxy0123456789";
 int moves[ROWS*COLS];
 int moves_counter = 0;
 int moves_counter2 = 0;
@@ -44,11 +45,7 @@ Time Timer()
 }
 void print_board()
 {
-    for (int i = 0; i < COLS; i++)
-    {
-        printf("| %c ",header[i]);
-    }
-    printf("|\n");
+    printf("\033[0;34m");
     for (int i = 0; i < ROWS; i++)
     {
         for (int j = 0; j < COLS; j++)
@@ -59,7 +56,7 @@ void print_board()
         for (int j = 0; j < COLS; j++)
         {
             printf("|");
-            //Change Color
+            //Change Color according to the Player
             if (board[i][j]=='X')
             {
                 printf("\033[0;31m");
@@ -69,11 +66,12 @@ void print_board()
                 printf("\033[0;33m");
             }
             printf(" %c ",board[i][j]);
-            //Back White
-            printf("\033[0;37m");
+            printf("\033[0;34m");
         }
         printf("|\n");
     }
+    //Back White
+    printf("\033[0;37m");
 }
 int count4s(int n)
 {
@@ -265,92 +263,30 @@ int lowest_row(int col)
     }
     return row;
 }
-int case_To_num(char Case)
+int case_To_num(char c[])
 {
     int col;
-    if (COLS > 22)
+    if (atoi(c))
     {
-        switch (Case)
-        {
-            case 'A': col = 0; break;   case 'a': col = 22; break;
-            case 'B': col = 1; break;   case 'b': col = 23; break;
-            case 'C': col = 2; break;   case 'c': col = 24; break;
-            case 'D': col = 3; break;   case 'd': col = 25; break;
-            case 'E': col = 4; break;   case 'e': col = 26; break;
-            case 'F': col = 5; break;   case 'f': col = 27; break;
-            case 'G': col = 6; break;   case 'g': col = 28; break;
-            case 'H': col = 7; break;   case 'h': col = 29; break;
-            case 'I': col = 8; break;   case 'i': col = 30; break;
-            case 'J': col = 9; break;   case 'j': col = 31; break;
-            case 'K': col = 10; break;   case 'k': col = 32; break;
-            case 'L': col = 11; break;   case 'l': col = 33; break;
-            case 'M': col = 12; break;   case 'm': col = 34; break;
-            case 'N': col = 13; break;   case 'n': col = 35; break;
-            case 'O': col = 14; break;   case 'o': col = 36; break;
-            case 'P': col = 15; break;   case 'p': col = 37; break;
-            case 'Q': col = 16; break;   case 'q': col = 38; break;
-            case 'T': col = 17; break;   case 't': col = 39; break;
-            case 'V': col = 18; break;   case 'v': col = 40; break;
-            case 'W': col = 19; break;   case 'w': col = 41; break;
-            case 'X': col = 20; break;   case 'x': col = 42; break;
-            case 'Y': col = 21; break;   case 'y': col = 43; break;
-            
-            case '0': col = 43; break;
-            case '1': col = 44; break;
-            case '2': col = 45; break;
-            case '3': col = 46; break;
-            case '4': col = 47; break;
-            case '5': col = 48; break;
-            case '6': col = 49; break;
-            case '7': col = 50; break;
-            case '8': col = 51; break;
-            case '9': col = 52; break;
-
-            case 'U': case 'u': col = -5; break;
-            case 'R': case 'r': col = -10; break;
-            default:
-                col = 100;
-                break;
-        }
+        col = atoi(c)-1;
+    }
+    else if ((c[0]=='u')||(c[0]=='U'))
+    {
+        col = -5;
+    }
+    else if ((c[0]=='r')||(c[0]=='R'))
+    {
+        col = -10;
     }
     else
     {
-        switch (Case)
-        {
-            case 'A': case 'a': col = 0; break;
-            case 'B': case 'b': col = 1; break;
-            case 'C': case 'c': col = 2; break;
-            case 'D': case 'd': col = 3; break;
-            case 'E': case 'e': col = 4; break;
-            case 'F': case 'f': col = 5; break;
-            case 'G': case 'g': col = 6; break;
-            case 'H': case 'h': col = 7; break;
-            case 'I': case 'i': col = 8; break;
-            case 'J': case 'j': col = 9; break;
-            case 'K': case 'k': col = 10; break;
-            case 'L': case 'l': col = 11; break;
-            case 'M': case 'm': col = 12; break;
-            case 'N': case 'n': col = 13; break;
-            case 'O': case 'o': col = 14; break;
-            case 'P': case 'p': col = 15; break;
-            case 'Q': case 'q': col = 16; break;
-            case 'T': case 't': col = 17; break;
-            case 'V': case 'v': col = 18; break;
-            case 'W': case 'w': col = 19; break;
-            case 'X': case 'x': col = 20; break;
-            case 'Y': case 'y': col = 21; break;
-            case 'U': case 'u': col = -5; break;
-            case 'R': case 'r': col = -10; break;
-            default:
-                col = 100;
-                break;
-        }
+        col = -1;
     }
     return col;
 }
-int take_column(char c)
+int take_column(char c[])
 {
-    scanf(" %c",&c);
+    fgets(c, MAX_LEN, stdin);
     return case_To_num(c);
 }
 void Undo(int mode)
@@ -380,24 +316,23 @@ void Redo(int mode)
 int game_mode()
 {
     int mode;
-    printf("For Human Vs Computer :Enter A\nFor Human Vs Human :Enter B\n");
-    char g_mode;
-    scanf(" %c",&g_mode);
-    switch (g_mode)
+    printf("For Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n");
+    char g_mode[MAX_LEN];
+    fgets(g_mode,sizeof(g_mode),stdin);
+    if (atoi(g_mode)==1)
     {
-        case 'A':
-        case 'a':
-            mode = 0;
-            break;
-        case 'B':
-        case 'b':
-            mode = 1;
-            break;
-    
-    default:
-        printf("Error Try Again\n");
+        printf("Human Vs Computer\n");
+        mode = 0;
+    }
+    else if (atoi(g_mode)==2)
+    {
+        printf("Human Vs Human\n");
+        mode = 1;
+    }
+    else
+    {
+        printf("\033[0;31mError Try Again\033[0;37m\nn");
         game_mode();
-        break;
     }
     return mode;
 }
@@ -416,7 +351,7 @@ void Computer_Play()
     }
 }
 void choose(int mode)
-{ char Case;
+{ char choice[MAX_LEN];
     print_board();
     if (tempPlayer.number==1)
     {
@@ -430,12 +365,12 @@ void choose(int mode)
     printf("Player %d,Turn: \033[0;37m",tempPlayer.number);
     if ((mode)||(moves_counter%2==0))
     {
-         int col = take_column(Case);
-        while (((col>=0&&col<COLS)&&(board[0][col]!=' '))||(col>=COLS))
+        int col = take_column(choice);
+        while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
         {
             print_board();
-            printf("Error Enter a valid column: ");
-            col = take_column(Case);
+            printf("\033[0;31mError Enter a valid column:\033[0;37m ");
+            col = take_column(choice);
         }
         if (col==-5)
         {
@@ -449,11 +384,11 @@ void choose(int mode)
             }
             else
             {
-                printf("\nNo Redo this the last move\n");
+                printf("\n\033[0;31mNo Redo this the last move\033[0;37m\n");
                 choose(mode);
             }
         }
-        else if (col<COLS)
+        else if (col < COLS && col >= 0 && (board[0][col]==' '))
         {
             board[lowest_row(col)][col] = tempPlayer.symbol;
             moves[moves_counter] = col;
@@ -492,14 +427,13 @@ int main() {
     {
         for (int j = 0; j < COLS; j++)
         {
-            board[i][j]='X';
+            board[i][j]=' ';
         }
     }
     //Player1                  //Player2
     player1.number = 1 ;       player2.number = 2;
     player1.symbol = 'X';      player2.symbol = 'O';
     tempPlayer = player1;
-    
     int mode = game_mode();
     time(&time_start);
     while (not_full())
