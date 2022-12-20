@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+//testing git
 #define ROWS 6
 #define COLS 7
 typedef struct 
