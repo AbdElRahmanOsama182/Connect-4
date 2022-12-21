@@ -9,7 +9,7 @@
 #define MAX_LEN 1000
 #define ROWS 6
 #define COLS 7
-typedef struct 
+typedef struct
 {
     int number;
     int score;
@@ -43,8 +43,56 @@ Time Timer()
     Time result = split_time(difftime(time_end,time_start));
     return result;
 }
+/////////////////////////////////
+//////////////////////////////////
+void save ()
+{
+    FILE*fp;
+
+    fp=fopen("save.txt","wb");
+
+    //board[ROWS][COLS]
+    fwrite(board,sizeof(board),1,fp);
+    fclose(fp);
+}
+
+
+
+
+
+//load from binary file
+void load()
+{
+    FILE*fp;
+
+    fp=fopen("save.txt","rb");
+    if (fp==NULL)    //check if the file is available
+    {
+        //printf("can't find and open file");
+        for (int i = 0; i < ROWS; i++)
+        {
+            for (int j = 0; j < COLS; j++)
+            {
+                board[i][j]='^';
+            }
+        }
+
+    }
+    else{
+            fread(board,sizeof(board),1,fp);
+    fclose(fp);
+    }
+
+}
+
+
+
+
+//////////////////////////////////
+/////////////////////////////////
 void print_board()
 {
+    system(" ");
     printf("\033[0;34m");
     for (int i = 0; i < ROWS; i++)
     {
@@ -86,7 +134,7 @@ int count4s(int n)
 }
 int Score(char player)
 {
-    
+
     int score = 0;
     //Horizontal
     for (int i = 0; i < ROWS; i++)
@@ -107,7 +155,7 @@ int Score(char player)
             {
                 score += count4s(count);
             }
-            
+
         }
     }
     //Vertical
@@ -193,7 +241,7 @@ int Score(char player)
                 score += count4s(count);
                 break;
             }
-            
+
             if (board[i][s-i] == player)
             {
                 count++;
@@ -219,7 +267,7 @@ int Score(char player)
                 score += count4s(count);
                 break;
             }
-            
+
             if (board[s+i][COLS-1-i] == player)
             {
                 count++;
@@ -237,12 +285,23 @@ int Score(char player)
     }
     return score;
 }
+void print_score()
+{
+    printf("\n\033[0;31mPlayer1's Final Score : %d\033[0;37m\n",Score('X'));
+    printf("\033[0;33mPlayer2's Final Score : %d\033[0;37m\n",Score('O'));
+    if (Score('X')>Score('O'))
+        printf("\033[0;31mPlayer1 is the WINNER\033[0;37m");
+    else if (Score('X')<Score('O'))
+        printf("\033[0;33mPlayer2 is the WINNER\033[0;37m");
+    else
+        printf("EVEN");
+}
 int not_full()
 {
     int full = 1;
     for (int i = 0; i < COLS; i++)
     {
-        if (board[0][i] == ' ')
+        if (board[0][i] == '^')
         {
             full = 0;
             break;
@@ -255,7 +314,7 @@ int lowest_row(int col)
     int row = -1;
     for (int i = ROWS-1; i >= 0; i--)
     {
-        if (board[i][col]==' ')
+        if (board[i][col]=='^')
         {
             row = i;
             break;
@@ -263,10 +322,10 @@ int lowest_row(int col)
     }
     return row;
 }
-int case_To_num(char c[])
+int case_To_num(char c[])   //turn the char that user enter to number like redo,undo
 {
     int col;
-    if (atoi(c))
+    if (atoi(c))    //fun that if the array of string is number return int, if it is string return 0
     {
         col = atoi(c)-1;
     }
@@ -291,15 +350,15 @@ int take_column(char c[])
 }
 void Undo(int mode)
 {
-    board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = ' ';
+    board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = '^';
     moves_counter--;
     if (!mode)
     {
-        board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = ' ';
+        board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = '^';
         moves_counter--;
         tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
     }
-    
+
 }
 void Redo(int mode)
 {
@@ -311,7 +370,7 @@ void Redo(int mode)
         board[lowest_row(moves[moves_counter])][moves[moves_counter]] = tempPlayer.symbol;
         moves_counter++;
     }
-    
+
 }
 int game_mode()
 {
@@ -347,7 +406,8 @@ void Computer_Play()
             col = rand()%(COLS-1);
         }
         board[lowest_row(col)][col] = 'O';
-        moves_counter++;moves_counter2 = moves_counter;
+        moves_counter++;
+        moves_counter2 = moves_counter;
     }
 }
 void choose(int mode)
@@ -361,12 +421,12 @@ void choose(int mode)
     {
         printf("\033[0;33m");
     }
-    
+
     printf("Player %d,Turn: \033[0;37m",tempPlayer.number);
     if ((mode)||(moves_counter%2==0))
     {
         int col = take_column(choice);
-        while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
+            while ((((col > -1) && (col < COLS)) && (board[0][col]!='^'))||(col>=COLS)||(col==-1))
         {
             print_board();
             printf("\033[0;31mError Enter a valid column:\033[0;37m ");
@@ -388,7 +448,7 @@ void choose(int mode)
                 choose(mode);
             }
         }
-        else if (col < COLS && col >= 0 && (board[0][col]==' '))
+        else if (col < COLS && col >= 0 && (board[0][col]=='^'))
         {
             board[lowest_row(col)][col] = tempPlayer.symbol;
             moves[moves_counter] = col;
@@ -411,25 +471,9 @@ int Moves(char player)
         return moves_counter/2;
     }
 }
-void print_score()
-{
-    printf("\n\033[0;31mPlayer1's Final Score : %d\033[0;37m\n",Score('X'));
-    printf("\033[0;33mPlayer2's Final Score : %d\033[0;37m\n",Score('O'));
-    if (Score('X')>Score('O'))
-        printf("\033[0;31mPlayer1 is the WINNER\033[0;37m");
-    else if (Score('X')<Score('O'))
-        printf("\033[0;33mPlayer2 is the WINNER\033[0;37m");
-    else
-        printf("EVEN");
-}
+
 int main() {
-    for (int i = 0; i < ROWS; i++)
-    {
-        for (int j = 0; j < COLS; j++)
-        {
-            board[i][j]=' ';
-        }
-    }
+     load();
     //Player1                  //Player2
     player1.number = 1 ;       player2.number = 2;
     player1.symbol = 'X';      player2.symbol = 'O';
@@ -439,13 +483,18 @@ int main() {
     while (not_full())
     {
         choose(mode);
+
         timer = Timer();
         printf("\n\033[0;32m%d:%d:%d\033[0;37m",timer.hours,timer.minutes,timer.seconds);
         printf("\n\033[0;31mPlayer1 score: %d\t\033[0;33mPlayer2 score: %d\033[0;37m\n",Score('X'),Score('O'));
         printf("\033[0;31mPlayer1 moves: %d\t\033[0;33mPlayer2 moves: %d\033[0;37m\n\n",Moves('X'),Moves('O'));
         tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
+        if(tempPlayer.number==1){
+            save();
+        }
     }
     print_board();
     print_score();
+
     return 0;
 }
