@@ -5,10 +5,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <ctype.h>
-#include<conio.h>
-#define MAX_LEN 1000
-#define ROWS 6
-#define COLS 7
+#include <conio.h>
+#define MAX_LEN 10000
+int ROWS, COLS, HIGHSCORES;
 typedef struct
 {
     int number;
@@ -25,11 +24,111 @@ typedef struct
 }Time;
 Time timer;
 time_t time_start,time_end;
-char board[ROWS][COLS];
-int moves[ROWS*COLS];
+int word_in_text(char word[],char text[])
+{
+    int found = -1;int i = 0;
+    while (text[i]!='\0')
+    {
+        int j = 0;
+        if (tolower(text[i])==word[j])
+        {
+            while ((tolower(text[i+j]) == word[j]) && (word[j] != '\0'))
+            {
+                j++;
+            }
+            if (word[j]=='\0')
+            {
+                found = i;
+            }
+        }
+        i++;
+    }
+    return found;
+}
+int bring_parameter(char start[],char end[],char text[])
+{
+    int s = word_in_text(start,text)+strlen(start);
+    int e = word_in_text(end,text);
+    int parameter;
+    if ((e == -1)||(s == -1)||(e-s == 0))
+    {
+        parameter = 0;
+    }
+    else
+    {
+        char temp[MAX_LEN];
+        for (int i = 0; i < e-s; i++)
+        {
+            temp[i] = text[s+i];
+        }
+        parameter = atoi(temp);
+        }
+    return parameter;
+}
+char xml_content[MAX_LEN];
+void ReadXML(FILE* xml_file)
+{
+    int i = 0;
+    while (!feof(xml_file))
+        {
+            char temp = fgetc(xml_file);
+            if ((temp!=' ')&&(temp!='\t')&&(temp!='\n'))
+            {
+                xml_content[i] = temp;
+                i++;
+            }
+        }
+}
+void XML()
+{
+    char configurations_s[]="<configurations>"; char configurations_e[]="</configurations>";
+    char height_s[]="<height>"; char height_e[]="</height>";
+    char width_s[]="<width>"; char width_e[]="</width>";
+    char highscores_s[]="<highscores>"; char highscores_e[]="</highscores>";
+    FILE* xml_file= fopen("parameters.xml", "r");
+    int tries = 3;
+    if (!(xml_file == NULL))
+    {
+        ReadXML(xml_file);
+        fclose(xml_file);
+        ROWS = bring_parameter(height_s, height_e,xml_content);
+        COLS = bring_parameter(width_s, width_e,xml_content);
+        HIGHSCORES = bring_parameter(highscores_s, highscores_e,xml_content);
+    }
+    while (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries)) 
+    {
+        printf("\033[0;31mFile error, Please Enter the correct file path with a valid parameters: \033[0;37m");
+        char path[MAX_LEN];
+        scanf("%s",path);
+        getchar();
+        xml_file = fopen(path, "r");
+        if (xml_file == NULL)
+        {
+            tries--;
+            continue;
+        }
+        ReadXML(xml_file);
+        fclose(xml_file);
+        ROWS = bring_parameter(height_s, height_e,xml_content);
+        COLS = bring_parameter(width_s, width_e,xml_content);
+        HIGHSCORES = bring_parameter(highscores_s, highscores_e,xml_content);
+        printf("%d %d %d \n\n",ROWS,COLS,HIGHSCORES);
+        tries--;
+    }
+    if (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries == 0))
+    {
+        ROWS = 6;
+        COLS = 7;
+        HIGHSCORES = 10;
+        printf("\033[0;31mFailed 3 times Loading the defaults\033[0;37m\n");
+        printf("Height = 6\nWidth = 7\nHighscores = 10\n");
+    }
+}
+char board[MAX_LEN][MAX_LEN];
+int moves[MAX_LEN*MAX_LEN];
 int moves_counter = 0;
 int moves_counter2 = 0;
-Time split_time(long long int s)
+Time split_time( long int s)
 {
     Time result;
     result.hours = (s/3600)%24;
@@ -92,7 +191,6 @@ void load()
 /////////////////////////////////
 void print_board()
 {
-    system(" ");
     printf("\033[0;34m");
     for (int i = 0; i < ROWS; i++)
     {
@@ -473,7 +571,15 @@ int Moves(char player)
 }
 
 int main() {
-     load();
+    XML();
+    //load();
+    for (int i = 0; i < ROWS; i++)
+    {
+        for (int j = 0; j < COLS; j++)
+        {
+            board[i][j]='^';
+        }
+    }
     //Player1                  //Player2
     player1.number = 1 ;       player2.number = 2;
     player1.symbol = 'X';      player2.symbol = 'O';
@@ -482,8 +588,8 @@ int main() {
     time(&time_start);
     while (not_full())
     {
+        system(" ");
         choose(mode);
-
         timer = Timer();
         printf("\n\033[0;32m%d:%d:%d\033[0;37m",timer.hours,timer.minutes,timer.seconds);
         printf("\n\033[0;31mPlayer1 score: %d\t\033[0;33mPlayer2 score: %d\033[0;37m\n",Score('X'),Score('O'));
