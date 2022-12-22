@@ -197,6 +197,15 @@ void Load()
 void print_board()
 {
     printf("%s",BLUE);
+    if (COLS<10)
+    {
+        printf(" ");
+        for (int i = 1; i <= COLS; i++)
+        {
+            printf(" %d  ",i);
+        }
+        printf("\n");
+    }
     for (int i = 0; i < ROWS; i++)
     {
         for (int j = 0; j < COLS; j++)
@@ -224,18 +233,31 @@ void print_board()
     //Back White
     printf("%s", WHITE);
 }
-int count4s(int n)
+int countns(int base,int count)
 {
-    if (n >= 4)
+    if (count >= base)
     {
-        return n-3;
+        return count+1-base;
     }
     else
     {
         return 0;
     }
 }
-int Score(char player)
+int lowest_row(int col)
+{
+    int row = -1;
+    for (int i = ROWS-1; i >= 0; i--)
+    {
+        if (board[i][col]=='^')
+        {
+            row = i;
+            break;
+        }
+    }
+    return row;
+}
+int Score(int base, char player)
 {
 
     int score = 0;
@@ -251,12 +273,12 @@ int Score(char player)
             }
             else if (j < COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (j == COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
 
         }
@@ -273,12 +295,12 @@ int Score(char player)
             }
             else if (j < ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (j == ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
         }
     }
@@ -290,7 +312,7 @@ int Score(char player)
         {
             if (i+s >=COLS)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 break;
             }
             if (board[i][i+s] == player)
@@ -299,12 +321,12 @@ int Score(char player)
             }
             else if (i < ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (i == ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
         }
     }
@@ -315,7 +337,7 @@ int Score(char player)
         {
             if (i+s >= ROWS)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 break;
             }
             if (board[i+s][i] == player)
@@ -324,12 +346,12 @@ int Score(char player)
             }
             else if (i < COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (i == COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
         }
     }
@@ -341,7 +363,7 @@ int Score(char player)
         {
             if (s-i < 0)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 break;
             }
 
@@ -351,12 +373,12 @@ int Score(char player)
             }
             else if (i < ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (i == ROWS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
         }
     }
@@ -367,7 +389,7 @@ int Score(char player)
         {
             if (s+i >= ROWS)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 break;
             }
 
@@ -377,24 +399,31 @@ int Score(char player)
             }
             else if (i < COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
                 count = 0;
             }
             if (i == COLS-1)
             {
-                score += count4s(count);
+                score += countns(base,count);
             }
         }
     }
     return score;
 }
+int ScoreAtPoint(int base, char player,int col)
+{
+    board[lowest_row(col)][col] = player;
+    int score = Score(base, player);
+    board[lowest_row(col)+1][col] = '^';
+    return score;
+}
 void print_score()
 {
-    printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score('X'), WHITE);
-    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, Score('O'), WHITE);
-    if (Score('X')>Score('O'))
+    printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score(4,'X'), WHITE);
+    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, Score(4,'O'), WHITE);
+    if (Score(4,'X')>Score(4,'O'))
         printf("%sPlayer1 is the WINNER%s\n", RED, WHITE);
-    else if (Score('X')<Score('O'))
+    else if (Score(4,'X')<Score(4,'O'))
         printf("%sPlayer2 is the WINNER%s\n", YELLOW, WHITE);
     else
         printf("EVEN\n");
@@ -411,19 +440,6 @@ int not_full()
         }
     }
     return !full;
-}
-int lowest_row(int col)
-{
-    int row = -1;
-    for (int i = ROWS-1; i >= 0; i--)
-    {
-        if (board[i][col]=='^')
-        {
-            row = i;
-            break;
-        }
-    }
-    return row;
 }
 int case_To_num(char c[])   //turn the char that user enter to number like redo,undo
 {
@@ -498,22 +514,84 @@ int game_mode()
     }
     return mode;
 }
-void Computer_Play()
+int game_level()
+{
+    int level;
+    printf("Easy Mode :Enter 1\nMedium Mode :Enter 2\n");
+    char g_level[MAX_LEN];
+    fgets(g_level,sizeof(g_level),stdin);
+    if (atoi(g_level)==1)
+    {
+        printf("Easy Mode\n");
+        level = 0;
+    }
+    else if (atoi(g_level)==2)
+    {
+        printf("Medium Mode\n");
+        level = 1;
+    }
+    else
+    {
+        printf("%sError Try Again%s\n", RED, WHITE);
+        game_level();
+    }
+    return level;
+}
+void Computer_Play(int level)
 {
     if (not_full())
     {
-        int col = rand()%(COLS-1);
-        moves[moves_counter] = col;
-        while (lowest_row(col)==-1)
+        int col = -1;
+        if (level)
         {
-            col = rand()%(COLS-1);
+            for (int n = 4; n > 1; n--)
+            {
+                int scoreX = Score(n,'X');
+                int scoreO = Score(n,'O');
+                for (int i = 0; i < COLS; i++)
+                {
+                    if (lowest_row(i)!=-1)
+                    {
+                        if ((ScoreAtPoint(n,'X',i)>scoreX)&&(ScoreAtPoint(n,'O',i)>scoreO))
+                        {
+                        col = i; scoreX = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
+                        }
+                    }
+                }
+                if (col != -1)
+                {
+                    break;
+                }
+                for (int i = 0; i < COLS; i++)
+                {
+                    if (lowest_row(i)!=-1)
+                    {
+                        if ((ScoreAtPoint(n,'X',i)>scoreX)||(ScoreAtPoint(n,'O',i)>scoreO))
+                        {
+                            col = i; scoreX = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
+                        }
+                    }
+                }
+                if (col != -1)
+                {
+                    break;
+                }
+            }
         }
+        else
+        {
+            while ((lowest_row(col)==-1)||(col == -1))
+            {
+                col = rand()%(COLS);
+            }
+        }
+        moves[moves_counter] = col;
         board[lowest_row(col)][col] = 'O';
         moves_counter++;
         moves_counter2 = moves_counter;
     }
 }
-void choose(int mode)
+void choose(int mode,int level)
 { char choice[MAX_LEN];
     print_board();
     if (tempPlayer.number==1)
@@ -526,7 +604,7 @@ void choose(int mode)
     }
 
     printf("Player %d,Turn: %s",tempPlayer.number, WHITE);
-    if ((mode)||(moves_counter%2==0))
+    if ((mode )||(moves_counter%2==0))
     {
         int col = take_column(choice);
             while ((((col > -1) && (col < COLS)) && (board[0][col]!='^'))||(col>=COLS)||(col==-1))
@@ -548,7 +626,7 @@ void choose(int mode)
             else
             {
                 printf("\n%sNo Redo this the last move%s\n", RED, WHITE);
-                choose(mode);
+                choose(mode,level);
             }
         }
         else if (col < COLS && col >= 0 && (board[0][col]=='^'))
@@ -560,7 +638,7 @@ void choose(int mode)
     }
     else
     {
-        Computer_Play();
+        Computer_Play(level);
     }
 }
 int Moves(char player)
@@ -638,14 +716,19 @@ int main() {
                 Load();
             }
             int mode = game_mode();
+            int level = 0;
+            if (!mode)
+            {
+                level = game_level();
+            }
             time(&time_start);
             while (not_full())
             {
                 system(" ");
-                choose(mode);
+                choose(mode,level);
                 timer = Timer();
                 printf("\n%s%d:%d:%d%s", GREEN, timer.hours, timer.minutes, timer.seconds, WHITE);
-                printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score('X'), YELLOW, Score('O'), WHITE);
+                printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score(4,'X'), YELLOW, Score(4,'O'), WHITE);
                 printf("%sPlayer1 moves: %d\t%sPlayer2 moves: %d%s\n\n", RED, Moves('X'), YELLOW, Moves('O'), WHITE);
                 tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
                 if(tempPlayer.number==1)
@@ -661,6 +744,7 @@ int main() {
             XML();
             printf("Highscores %d\n",HIGHSCORES);
         }
+        moves_counter = moves_counter2 = 0;
         option = BackToMain();
     }
     return 0;
