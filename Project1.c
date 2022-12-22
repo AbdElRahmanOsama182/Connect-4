@@ -6,6 +6,11 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <conio.h>
+#define RED "\033[0;31m"
+#define BLUE "\033[0;34m"
+#define YELLOW "\033[0;33m"
+#define GREEN "\033[0;32m"
+#define WHITE "\033[0;37m"
 #define MAX_LEN 10000
 int ROWS, COLS, HIGHSCORES;
 typedef struct
@@ -97,7 +102,7 @@ void XML()
     }
     while (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries)) 
     {
-        printf("\033[0;31mFile error, Please Enter the correct file path with a valid parameters: \033[0;37m");
+        printf("%sFile error, Please Enter the correct file path with a valid parameters: %s", RED, WHITE);
         char path[MAX_LEN];
         scanf("%s",path);
         getchar();
@@ -120,7 +125,7 @@ void XML()
         ROWS = 6;
         COLS = 7;
         HIGHSCORES = 10;
-        printf("\033[0;31mFailed 3 times Loading the defaults\033[0;37m\n");
+        printf("%sFailed 3 times Loading the defaults%s\n", RED, WHITE);
         printf("Height = 6\nWidth = 7\nHighscores = 10\n");
     }
 }
@@ -144,7 +149,7 @@ Time Timer()
 }
 /////////////////////////////////
 //////////////////////////////////
-void save ()
+void Save ()
 {
     FILE*fp;
 
@@ -160,7 +165,7 @@ void save ()
 
 
 //load from binary file
-void load()
+void Load()
 {
     FILE*fp;
 
@@ -191,7 +196,7 @@ void load()
 /////////////////////////////////
 void print_board()
 {
-    printf("\033[0;34m");
+    printf("%s",BLUE);
     for (int i = 0; i < ROWS; i++)
     {
         for (int j = 0; j < COLS; j++)
@@ -205,19 +210,19 @@ void print_board()
             //Change Color according to the Player
             if (board[i][j]=='X')
             {
-                printf("\033[0;31m");
+                printf("%s",RED);
             }
             else if (board[i][j]=='O')
             {
-                printf("\033[0;33m");
+                printf("%s", YELLOW);
             }
             printf(" %c ",board[i][j]);
-            printf("\033[0;34m");
+            printf("%s",BLUE);
         }
         printf("|\n");
     }
     //Back White
-    printf("\033[0;37m");
+    printf("%s", WHITE);
 }
 int count4s(int n)
 {
@@ -385,14 +390,14 @@ int Score(char player)
 }
 void print_score()
 {
-    printf("\n\033[0;31mPlayer1's Final Score : %d\033[0;37m\n",Score('X'));
-    printf("\033[0;33mPlayer2's Final Score : %d\033[0;37m\n",Score('O'));
+    printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score('X'), WHITE);
+    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, Score('O'), WHITE);
     if (Score('X')>Score('O'))
-        printf("\033[0;31mPlayer1 is the WINNER\033[0;37m");
+        printf("%sPlayer1 is the WINNER%s\n", RED, WHITE);
     else if (Score('X')<Score('O'))
-        printf("\033[0;33mPlayer2 is the WINNER\033[0;37m");
+        printf("%sPlayer2 is the WINNER%s\n", YELLOW, WHITE);
     else
-        printf("EVEN");
+        printf("EVEN\n");
 }
 int not_full()
 {
@@ -488,7 +493,7 @@ int game_mode()
     }
     else
     {
-        printf("\033[0;31mError Try Again\033[0;37m\nn");
+        printf("%sError Try Again%s\n", RED, WHITE);
         game_mode();
     }
     return mode;
@@ -513,21 +518,21 @@ void choose(int mode)
     print_board();
     if (tempPlayer.number==1)
     {
-        printf("\033[0;31m");
+        printf("%s", RED);
     }
     else
     {
-        printf("\033[0;33m");
+        printf("%s",YELLOW);
     }
 
-    printf("Player %d,Turn: \033[0;37m",tempPlayer.number);
+    printf("Player %d,Turn: %s",tempPlayer.number, WHITE);
     if ((mode)||(moves_counter%2==0))
     {
         int col = take_column(choice);
             while ((((col > -1) && (col < COLS)) && (board[0][col]!='^'))||(col>=COLS)||(col==-1))
         {
             print_board();
-            printf("\033[0;31mError Enter a valid column:\033[0;37m ");
+            printf("%sError Enter a valid column:%s ", RED, WHITE);
             col = take_column(choice);
         }
         if (col==-5)
@@ -542,7 +547,7 @@ void choose(int mode)
             }
             else
             {
-                printf("\n\033[0;31mNo Redo this the last move\033[0;37m\n");
+                printf("\n%sNo Redo this the last move%s\n", RED, WHITE);
                 choose(mode);
             }
         }
@@ -569,38 +574,94 @@ int Moves(char player)
         return moves_counter/2;
     }
 }
-
-int main() {
-    XML();
-    //load();
-    for (int i = 0; i < ROWS; i++)
+int MainMenu()
+{
+    printf("Start New Game: 1\n");
+    printf("Load Game: 2\n");
+    printf("Top Players: 3\n");
+    printf("Quit: 4\n");
+    char option[MAX_LEN];
+    fgets(option, MAX_LEN, stdin);
+    if ((atoi(option) < 5) && (atoi(option)))
     {
-        for (int j = 0; j < COLS; j++)
-        {
-            board[i][j]='^';
-        }
+        return atoi(option);
     }
+    else
+    {
+        printf("%sError enter a valid option!%s\n", RED, WHITE);
+        return MainMenu();
+    }
+}
+int BackToMain()
+{
+    printf("Back to Main Menu: 1\n");
+    printf("Quit: 2\n");
+    char option[MAX_LEN];
+    fgets(option, MAX_LEN, stdin);
+    if (atoi(option) == 1)
+    {
+        MainMenu();
+    }
+    else if (atoi(option) == 0)
+    {
+        printf("%sError enter a valid option!%s\n", RED, WHITE);
+        return BackToMain();
+    }
+    else
+    {
+        return 4;
+    }
+}
+int main() {
     //Player1                  //Player2
     player1.number = 1 ;       player2.number = 2;
     player1.symbol = 'X';      player2.symbol = 'O';
     tempPlayer = player1;
-    int mode = game_mode();
-    time(&time_start);
-    while (not_full())
+    int option = MainMenu();
+    while (option != 4)
     {
-        system(" ");
-        choose(mode);
-        timer = Timer();
-        printf("\n\033[0;32m%d:%d:%d\033[0;37m",timer.hours,timer.minutes,timer.seconds);
-        printf("\n\033[0;31mPlayer1 score: %d\t\033[0;33mPlayer2 score: %d\033[0;37m\n",Score('X'),Score('O'));
-        printf("\033[0;31mPlayer1 moves: %d\t\033[0;33mPlayer2 moves: %d\033[0;37m\n\n",Moves('X'),Moves('O'));
-        tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
-        if(tempPlayer.number==1){
-            save();
+        if (option != 3)
+        {
+            if ( option == 1)
+            {
+                XML();
+                for (int i = 0; i < ROWS; i++)
+                {
+                    for (int j = 0; j < COLS; j++)
+                    {
+                        board[i][j]='^';
+                    }
+                }
+            }
+            else if (option == 2)
+            {
+                Load();
+            }
+            int mode = game_mode();
+            time(&time_start);
+            while (not_full())
+            {
+                system(" ");
+                choose(mode);
+                timer = Timer();
+                printf("\n%s%d:%d:%d%s", GREEN, timer.hours, timer.minutes, timer.seconds, WHITE);
+                printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score('X'), YELLOW, Score('O'), WHITE);
+                printf("%sPlayer1 moves: %d\t%sPlayer2 moves: %d%s\n\n", RED, Moves('X'), YELLOW, Moves('O'), WHITE);
+                tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
+                if(tempPlayer.number==1)
+                {
+                    Save();
+                }
+            }
+            print_board();
+            print_score();
         }
+        else
+        {
+            XML();
+            printf("Highscores %d\n",HIGHSCORES);
+        }
+        option = BackToMain();
     }
-    print_board();
-    print_score();
-
     return 0;
 }
