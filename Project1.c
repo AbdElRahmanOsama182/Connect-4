@@ -417,6 +417,24 @@ int ScoreAtPoint(int base, char player,int col)
     board[lowest_row(col)+1][col] = '^';
     return score;
 }
+int ScoreX_At2Points(int base, int col1)
+{
+    int score;
+    if (lowest_row(col1)>0)
+    {
+        board[lowest_row(col1)][col1] = 'O';
+        board[lowest_row(col1)][col1] = 'X';
+        score = Score(base, 'X');
+        board[lowest_row(col1)+1][col1] = '^';
+        board[lowest_row(col1)+1][col1] = '^';
+    }
+    else
+    {
+        score = Score(base, 'X');
+    }
+    
+    return score;
+}
 void print_score()
 {
     printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score(4,'X'), WHITE);
@@ -489,27 +507,26 @@ void Redo(int mode)
         board[lowest_row(moves[moves_counter])][moves[moves_counter]] = tempPlayer.symbol;
         moves_counter++;
     }
-
 }
 int game_mode()
 {
     int mode;
-    printf("For Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n");
+    printf("%sFor Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n", GREEN);
     char g_mode[MAX_LEN];
     fgets(g_mode,sizeof(g_mode),stdin);
     if (atoi(g_mode)==1)
     {
-        printf("Human Vs Computer\n");
+        printf("Human Vs Computer\n%s", WHITE);
         mode = 0;
     }
     else if (atoi(g_mode)==2)
     {
-        printf("Human Vs Human\n");
+        printf("Human Vs Human\n%s", WHITE);
         mode = 1;
     }
     else
     {
-        printf("%sError Try Again%s\n", RED, WHITE);
+        printf("%sError Try Again\n", RED);
         game_mode();
     }
     return mode;
@@ -517,22 +534,27 @@ int game_mode()
 int game_level()
 {
     int level;
-    printf("Easy Mode :Enter 1\nMedium Mode :Enter 2\n");
+    printf("%sEasy Mode :Enter 1\nMedium Mode :Enter 2\nHard Mode :Enter 3\n", GREEN);
     char g_level[MAX_LEN];
     fgets(g_level,sizeof(g_level),stdin);
     if (atoi(g_level)==1)
     {
-        printf("Easy Mode\n");
+        printf("Easy Mode\n%s", WHITE);
         level = 0;
     }
     else if (atoi(g_level)==2)
     {
-        printf("Medium Mode\n");
+        printf("Medium Mode\n%s", WHITE);
         level = 1;
+    }
+    else if (atoi(g_level)==3)
+    {
+        printf("Hard Mode\n%s", WHITE);
+        level = 2;
     }
     else
     {
-        printf("%sError Try Again%s\n", RED, WHITE);
+        printf("%sError Try Again\n", RED);
         game_level();
     }
     return level;
@@ -542,43 +564,52 @@ void Computer_Play(int level)
     if (not_full())
     {
         int col = -1;
-        if (level)
+        if (level == 2)
         {
             for (int n = 4; n > 1; n--)
             {
-                int scoreX = Score(n,'X');
+                int scoreX1 = Score(n,'X');
+                int scoreX2 = Score(n,'X');
                 int scoreO = Score(n,'O');
                 for (int i = 0; i < COLS; i++)
                 {
                     if (lowest_row(i)!=-1)
                     {
-                        if ((ScoreAtPoint(n,'X',i)>scoreX)&&(ScoreAtPoint(n,'O',i)>scoreO))
+                        if (((ScoreAtPoint(n,'X',i)+ScoreAtPoint(n,'O',i))>(scoreX1+scoreO))&&(scoreX2==ScoreX_At2Points(n,i)))
                         {
-                        col = i; scoreX = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
+                        col = i; scoreX1 = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
                         }
                     }
                 }
-                if (col != -1)
-                {
-                    break;
-                }
-                for (int i = 0; i < COLS; i++)
-                {
-                    if (lowest_row(i)!=-1)
-                    {
-                        if ((ScoreAtPoint(n,'X',i)>scoreX)||(ScoreAtPoint(n,'O',i)>scoreO))
-                        {
-                            col = i; scoreX = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
-                        }
-                    }
-                }
-                if (col != -1)
+                if (col != -1) 
                 {
                     break;
                 }
             }
         }
-        else
+        if (level && (col== -1))
+        {
+            for (int n = 4; n > 1; n--)
+            {
+                int scoreX1 = Score(n,'X');
+                int scoreO = Score(n,'O');
+                for (int i = 0; i < COLS; i++)
+                {
+                    if (lowest_row(i)!=-1)
+                    {
+                        if (((ScoreAtPoint(n,'X',i)+ScoreAtPoint(n,'O',i))>(scoreX1+scoreO)))
+                        {
+                        col = i; scoreX1 = ScoreAtPoint(n,'X',i); scoreO = ScoreAtPoint(n,'O',i);
+                        }
+                    }
+                }
+                if (col != -1) 
+                {
+                    break;
+                }
+            }
+        }
+        if (col == -1)
         {
             while ((lowest_row(col)==-1)||(col == -1))
             {
@@ -654,7 +685,7 @@ int Moves(char player)
 }
 int MainMenu()
 {
-    printf("Start New Game: 1\n");
+    printf("%sStart New Game: 1\n", GREEN);
     printf("Load Game: 2\n");
     printf("Top Players: 3\n");
     printf("Quit: 4\n");
@@ -662,27 +693,29 @@ int MainMenu()
     fgets(option, MAX_LEN, stdin);
     if ((atoi(option) < 5) && (atoi(option)))
     {
+        printf("%s", WHITE);
         return atoi(option);
     }
     else
     {
-        printf("%sError enter a valid option!%s\n", RED, WHITE);
+        printf("%sError enter a valid option!\n", RED);
         return MainMenu();
     }
 }
 int BackToMain()
 {
-    printf("Back to Main Menu: 1\n");
+    printf("%sBack to Main Menu: 1\n", GREEN);
     printf("Quit: 2\n");
     char option[MAX_LEN];
     fgets(option, MAX_LEN, stdin);
     if (atoi(option) == 1)
     {
+        printf("%s", WHITE);
         MainMenu();
     }
     else if (atoi(option) == 0)
     {
-        printf("%sError enter a valid option!%s\n", RED, WHITE);
+        printf("%sError enter a valid option!\n", RED);
         return BackToMain();
     }
     else
