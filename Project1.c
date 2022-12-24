@@ -16,11 +16,17 @@ int ROWS, COLS, HIGHSCORES;
 typedef struct
 {
     int number;
-    int score;
+    //int score;
     char symbol;
-    char name[];
+    //char name[];
 }Player;
 Player player1,player2,tempPlayer;
+typedef struct
+{
+    int score;
+    char name[100];
+}Winner;
+Winner winner,TopPlayers[MAX_LEN];
 typedef struct
 {
     int hours;
@@ -127,6 +133,127 @@ void XML()
         HIGHSCORES = 10;
         printf("%sFailed 3 times Loading the defaults%s\n", RED, WHITE);
         printf("Height = 6\nWidth = 7\nHighscores = 10\n");
+    }
+}
+//Sorting the Top Players list descending by MergeSort
+void merge(Winner arr[],int start,int mid,int end)
+{
+    int i, s , j, k; Winner temp[MAX_LEN];
+    s=start;
+    j=mid+1;
+    i=start;
+
+    while((s<=mid)&&(j<=end))
+    {
+        if(arr[s].score>=arr[j].score)
+        {
+            temp[i]=arr[s];
+            s++;
+        }
+        else
+        {
+            temp[i]=arr[j];
+            j++;
+        }
+        i++;
+    }
+    if(s>mid)
+    {
+        for(k=j; k<=end; k++)
+        {
+            temp[i]=arr[k];
+            i++;
+        }
+    }
+    else
+    {
+        for(k=s; k<=mid; k++)
+        {
+            temp[i]=arr[k];
+            i++;
+        }
+    }
+    for(k=start; k<=end; k++)
+    {
+        arr[k]=temp[k];
+    }
+}
+void mergeSort(Winner arr[], int start, int end)
+{
+    int mid;
+    if(start<end)
+    {
+    mid = (start+end)/2;
+    mergeSort(arr, start, mid);
+    mergeSort(arr, mid+1, end);
+    merge(arr, start, mid, end);
+    }
+}
+int scores_counter = 0;
+void addWinnerTofile()
+{
+    FILE * scores_file = fopen("Scores.txt", "ab");
+    fwrite(&winner,sizeof(winner),1,scores_file);
+    fclose(scores_file);
+}
+void read_scores()
+{
+    scores_counter = 0;
+    FILE * scores_file = fopen("Scores.txt", "rb");
+    if (scores_file == NULL)
+    {
+        printf("NO Highscores yet\n");
+    }
+    else
+    {
+        while (!(feof(scores_file)))
+        {
+            fread(&TopPlayers[scores_counter],sizeof(TopPlayers[scores_counter]),1,scores_file);
+            scores_counter++;
+        }
+        fclose(scores_file);
+        mergeSort(TopPlayers,0,scores_counter-1);
+    }
+}
+int get_rank()
+{
+    int rank;
+    for (int i = 0; i < scores_counter-1; i++)
+    {
+        if (winner.score == TopPlayers[i].score)
+        {
+            rank = i + 1;
+            break;
+        }
+    }
+    return rank;
+}
+void print_TopPlayers()
+{
+    int size = scores_counter-1;
+    //If the player has two scores the lower will be zero
+    for (int i = 0; i < scores_counter-1; i++)
+    {
+        for (int j = i+1; j < scores_counter-1; j++)
+        {
+            if (strcasecmp(TopPlayers[i].name,TopPlayers[j].name)==0)
+            {
+                TopPlayers[j].score = 0;
+            }
+        }
+    }
+    mergeSort(TopPlayers,0,scores_counter-1);
+    if (HIGHSCORES < scores_counter-1)
+    {
+        size = HIGHSCORES;
+    }
+    printf("  Player \tScore\n");
+    for (int i = 0; i < size; i++)
+    {
+        if (TopPlayers[i].score)
+        {
+            printf("%d. %s \t%d\n", i+1, TopPlayers[i].name, TopPlayers[i].score);
+        }
     }
 }
 char board[MAX_LEN][MAX_LEN];
@@ -435,17 +562,44 @@ int ScoreX_At2Points(int base, int col1)
     
     return score;
 }
-void print_score()
+void print_Fscore(int mode)
 {
+    winner.score = 0;
     printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score(4,'X'), WHITE);
     printf("%sPlayer2's Final Score : %d%s\n", YELLOW, Score(4,'O'), WHITE);
     if (Score(4,'X')>Score(4,'O'))
+    {
         printf("%sPlayer1 is the WINNER%s\n", RED, WHITE);
+        winner.score = Score(4,'X');
+        printf("Player1 Enter you name, please: ");
+    }
     else if (Score(4,'X')<Score(4,'O'))
+    {
         printf("%sPlayer2 is the WINNER%s\n", YELLOW, WHITE);
+        if (mode)
+        {
+            winner.score = Score(4,'O');
+            printf("Player2 Enter you name, please: ");
+        }
+    }
     else
         printf("EVEN\n");
+    if (winner.score)
+    {
+        gets(winner.name);
+        fflush(stdin);
+        addWinnerTofile();
+        read_scores();
+        int rank = get_rank();
+        printf("your rank is %d\n",rank);
+        if (rank < HIGHSCORES)
+        {
+            print_TopPlayers();
+        }
+        
+    }
 }
+
 int not_full()
 {
     int full = 1;
@@ -683,6 +837,12 @@ int Moves(char player)
         return moves_counter/2;
     }
 }
+void print_game_data()
+{
+    printf("\n%s%d:%d:%d%s", GREEN, timer.hours, timer.minutes, timer.seconds, WHITE);
+    printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score(4,'X'), YELLOW, Score(4,'O'), WHITE);
+    printf("%sPlayer1 moves: %d\t%sPlayer2 moves: %d%s\n\n", RED, Moves('X'), YELLOW, Moves('O'), WHITE);
+}
 int MainMenu()
 {
     printf("%sStart New Game: 1\n", GREEN);
@@ -731,11 +891,11 @@ int main() {
     int option = MainMenu();
     while (option != 4)
     {
+        XML();
         if (option != 3)
         {
             if ( option == 1)
             {
-                XML();
                 for (int i = 0; i < ROWS; i++)
                 {
                     for (int j = 0; j < COLS; j++)
@@ -746,8 +906,9 @@ int main() {
             }
             else if (option == 2)
             {
-                Load();
+                Load;
             }
+            
             int mode = game_mode();
             int level = 0;
             if (!mode)
@@ -760,9 +921,7 @@ int main() {
                 system(" ");
                 choose(mode,level);
                 timer = Timer();
-                printf("\n%s%d:%d:%d%s", GREEN, timer.hours, timer.minutes, timer.seconds, WHITE);
-                printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score(4,'X'), YELLOW, Score(4,'O'), WHITE);
-                printf("%sPlayer1 moves: %d\t%sPlayer2 moves: %d%s\n\n", RED, Moves('X'), YELLOW, Moves('O'), WHITE);
+                print_game_data();
                 tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
                 if(tempPlayer.number==1)
                 {
@@ -770,15 +929,16 @@ int main() {
                 }
             }
             print_board();
-            print_score();
+            print_Fscore(mode);
         }
         else
         {
-            XML();
-            printf("Highscores %d\n",HIGHSCORES);
+            read_scores();
+            print_TopPlayers();
         }
         moves_counter = moves_counter2 = 0;
         option = BackToMain();
     }
+    printf("%s", WHITE);
     return 0;
 }
