@@ -16,9 +16,7 @@ int ROWS, COLS, HIGHSCORES;
 typedef struct
 {
     int number;
-    //int score;
     char symbol;
-    //char name[];
 }Player;
 Player player1,player2,tempPlayer;
 typedef struct
@@ -274,53 +272,116 @@ Time Timer()
     Time result = split_time(difftime(time_end,time_start));
     return result;
 }
-/////////////////////////////////
-//////////////////////////////////
 void Save ()
 {
-    FILE*fp;
-
-    fp=fopen("save.txt","wb");
-
-    //board[ROWS][COLS]
-    fwrite(board,sizeof(board),1,fp);
-    fclose(fp);
+    typedef struct
+    {
+        int moves_num;
+        int moves[MAX_LEN];
+        char Board[ROWS][COLS];
+    }games;
+    games tempBoard;
+    tempBoard.moves_num = moves_counter;
+    for (int i = 0; i < moves_counter; i++)
+    {
+        tempBoard.moves[i]=moves[i];
+    }
+    
+    FILE * savedGames = fopen("savedGames.bin","ab");
+    for (int i = 0; i < ROWS; i++)
+    {
+        for (int j = 0; j < COLS; j++)
+        {
+            tempBoard.Board[i][j] = board[i][j];
+            if (tempBoard.Board[i][j] == ' ')
+            {
+                tempBoard.Board[i][j] == '^';
+            }
+        }
+    }
+    fwrite(&tempBoard,sizeof(tempBoard),1,savedGames);
+    fclose(savedGames);
 }
-
-
-
-
-
-//load from binary file
 void Load()
 {
-    FILE*fp;
-
-    fp=fopen("save.txt","rb");
-    if (fp==NULL)    //check if the file is available
+    typedef struct
     {
-        //printf("can't find and open file");
+        int moves_num;
+        int moves[MAX_LEN];
+        char Board[ROWS][COLS];
+    }games;
+    games savedboards[10];
+    FILE * savedGames = fopen("savedGames.bin","rb");
+    if (savedGames==NULL)
+    {
+        printf("No Saved Games starting a New One\n");
         for (int i = 0; i < ROWS; i++)
         {
             for (int j = 0; j < COLS; j++)
             {
-                board[i][j]='^';
+                board[i][j]=' ';
             }
         }
 
     }
-    else{
-            fread(board,sizeof(board),1,fp);
-    fclose(fp);
+    else
+    {
+        int boards_counter = 0;
+        while (!feof(savedGames))
+        {
+            fread(&savedboards[boards_counter],sizeof(savedboards[boards_counter]),1,savedGames);
+            boards_counter++;
+        }
+        fclose(savedGames);
+        //if the number of games is more than 5 clear the old ones
+        if (boards_counter > 6)
+        {
+            int s = boards_counter-1;
+            FILE * savedGames = fopen("savedGames.bin","wb");
+            for (int i = s-5; i < s; i++)
+            {
+                fwrite(&savedboards[i],sizeof(savedboards[i]),1,savedGames);
+            }
+            fclose(savedGames);
+        }
+        
+        printf("Choose Game number from 1 to %d: ",boards_counter-1);
+        char game_num[MAX_LEN];
+        int gameNum;
+        fgets(game_num, MAX_LEN, stdin);
+        if ((atoi(game_num) > 0) && (atoi(game_num) < boards_counter))
+        {
+            gameNum = atoi(game_num)-1;
+        }
+        else
+        {
+            while (!((atoi(game_num) > 0) && (atoi(game_num) < boards_counter)))
+            {
+                printf("Enter valid game number: ");
+                fgets(game_num, MAX_LEN, stdin);
+            }
+            gameNum = atoi(game_num)-1;
+        }
+        moves_counter = savedboards[gameNum].moves_num;
+        for (int i = 0; i < moves_counter; i++)
+        {
+            moves[i] = savedboards[gameNum].moves[i];
+        }
+        for (int i = 0; i < ROWS; i++)
+        {
+            for (int j = 0; j < COLS; j++)
+            {
+                board[i][j] = savedboards[gameNum].Board[i][j];
+                if (board[i][j] == '^')
+                {
+                    board[i][j] = ' ';
+                }
+            
+            }
+        }
     }
 
 }
-
-
-
-
-//////////////////////////////////
-/////////////////////////////////
 void print_board()
 {
     printf("%s",BLUE);
@@ -376,7 +437,7 @@ int lowest_row(int col)
     int row = -1;
     for (int i = ROWS-1; i >= 0; i--)
     {
-        if (board[i][col]=='^')
+        if (board[i][col]==' ')
         {
             row = i;
             break;
@@ -541,7 +602,7 @@ int ScoreAtPoint(int base, char player,int col)
 {
     board[lowest_row(col)][col] = player;
     int score = Score(base, player);
-    board[lowest_row(col)+1][col] = '^';
+    board[lowest_row(col)+1][col] = ' ';
     return score;
 }
 int ScoreX_At2Points(int base, int col1)
@@ -552,8 +613,8 @@ int ScoreX_At2Points(int base, int col1)
         board[lowest_row(col1)][col1] = 'O';
         board[lowest_row(col1)][col1] = 'X';
         score = Score(base, 'X');
-        board[lowest_row(col1)+1][col1] = '^';
-        board[lowest_row(col1)+1][col1] = '^';
+        board[lowest_row(col1)+1][col1] = ' ';
+        board[lowest_row(col1)+1][col1] = ' ';
     }
     else
     {
@@ -599,13 +660,12 @@ void print_Fscore(int mode)
         
     }
 }
-
 int not_full()
 {
     int full = 1;
     for (int i = 0; i < COLS; i++)
     {
-        if (board[0][i] == '^')
+        if (board[0][i] == ' ')
         {
             full = 0;
             break;
@@ -628,6 +688,10 @@ int case_To_num(char c[])   //turn the char that user enter to number like redo,
     {
         col = -10;
     }
+     else if ((c[0]=='s')||(c[0]=='S'))
+    {
+        col = -15;
+    }
     else
     {
         col = -1;
@@ -641,11 +705,11 @@ int take_column(char c[])
 }
 void Undo(int mode)
 {
-    board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = '^';
+    board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = ' ';
     moves_counter--;
     if (!mode)
     {
-        board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = '^';
+        board[lowest_row(moves[moves_counter-1])+1][moves[moves_counter-1]] = ' ';
         moves_counter--;
         tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
     }
@@ -776,9 +840,16 @@ void Computer_Play(int level)
         moves_counter2 = moves_counter;
     }
 }
-void choose(int mode,int level)
+int choose(int mode,int level)
 { char choice[MAX_LEN];
-    print_board();
+    if (moves_counter%2==0)
+    {
+        tempPlayer = player1;
+    }
+    else
+    {
+        tempPlayer = player2;
+    }print_board();
     if (tempPlayer.number==1)
     {
         printf("%s", RED);
@@ -792,7 +863,7 @@ void choose(int mode,int level)
     if ((mode )||(moves_counter%2==0))
     {
         int col = take_column(choice);
-            while ((((col > -1) && (col < COLS)) && (board[0][col]!='^'))||(col>=COLS)||(col==-1))
+            while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
         {
             print_board();
             printf("%sError Enter a valid column:%s ", RED, WHITE);
@@ -814,16 +885,18 @@ void choose(int mode,int level)
                 choose(mode,level);
             }
         }
-        else if (col < COLS && col >= 0 && (board[0][col]=='^'))
+        else if (col < COLS && col >= 0 && (board[0][col]==' '))
         {
             board[lowest_row(col)][col] = tempPlayer.symbol;
             moves[moves_counter] = col;
             moves_counter++;moves_counter2 = moves_counter;
         }
+        return col;
     }
     else
     {
         Computer_Play(level);
+        return 0;
     }
 }
 int Moves(char player)
@@ -900,13 +973,13 @@ int main() {
                 {
                     for (int j = 0; j < COLS; j++)
                     {
-                        board[i][j]='^';
+                        board[i][j]=' ';
                     }
                 }
             }
             else if (option == 2)
             {
-                Load;
+                Load();
             }
             
             int mode = game_mode();
@@ -916,20 +989,26 @@ int main() {
                 level = game_level();
             }
             time(&time_start);
+            int save_game = 0;
             while (not_full())
             {
                 system(" ");
-                choose(mode,level);
+                save_game = choose(mode,level);
                 timer = Timer();
                 print_game_data();
                 tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
-                if(tempPlayer.number==1)
+                if(save_game==-15)
                 {
                     Save();
+                    printf("game saved\n");
+                    break;
                 }
             }
-            print_board();
-            print_Fscore(mode);
+            if (save_game != -15)
+            {
+                print_board();
+                print_Fscore(mode);
+            }
         }
         else
         {
