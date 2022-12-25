@@ -17,14 +17,10 @@ typedef struct
 {
     int number;
     char symbol;
-}Player;
-Player player1,player2,tempPlayer;
-typedef struct
-{
     int score;
     char name[100];
-}Winner;
-Winner winner,TopPlayers[MAX_LEN];
+}Player;
+Player player1,player2,tempPlayer,winner,TopPlayers[MAX_LEN];
 typedef struct
 {
     int hours;
@@ -33,6 +29,14 @@ typedef struct
 }Time;
 Time timer;
 time_t time_start,time_end;
+typedef struct
+    {
+        int rows;
+        int cols;
+        int moves_num;
+        int moves[MAX_LEN];
+    }games;
+    games savegame, savedboards[10];
 int word_in_text(char word[],char text[])
 {
     int found = -1;int i = 0;
@@ -134,9 +138,9 @@ void XML()
     }
 }
 //Sorting the Top Players list descending by MergeSort
-void merge(Winner arr[],int start,int mid,int end)
+void merge(Player arr[],int start,int mid,int end)
 {
-    int i, s , j, k; Winner temp[MAX_LEN];
+    int i, s , j, k; Player temp[MAX_LEN];
     s=start;
     j=mid+1;
     i=start;
@@ -176,7 +180,7 @@ void merge(Winner arr[],int start,int mid,int end)
         arr[k]=temp[k];
     }
 }
-void mergeSort(Winner arr[], int start, int end)
+void mergeSort(Player arr[], int start, int end)
 {
     int mid;
     if(start<end)
@@ -190,14 +194,14 @@ void mergeSort(Winner arr[], int start, int end)
 int scores_counter = 0;
 void addWinnerTofile()
 {
-    FILE * scores_file = fopen("Scores.txt", "ab");
+    FILE * scores_file = fopen("hScores.txt", "ab");
     fwrite(&winner,sizeof(winner),1,scores_file);
     fclose(scores_file);
 }
 void read_scores()
 {
     scores_counter = 0;
-    FILE * scores_file = fopen("Scores.txt", "rb");
+    FILE * scores_file = fopen("hScores.txt", "rb");
     if (scores_file == NULL)
     {
         printf("NO Highscores yet\n");
@@ -213,22 +217,8 @@ void read_scores()
         mergeSort(TopPlayers,0,scores_counter-1);
     }
 }
-int get_rank()
+void removeDublicates()
 {
-    int rank;
-    for (int i = 0; i < scores_counter-1; i++)
-    {
-        if (winner.score == TopPlayers[i].score)
-        {
-            rank = i + 1;
-            break;
-        }
-    }
-    return rank;
-}
-void print_TopPlayers()
-{
-    int size = scores_counter-1;
     //If the player has two scores the lower will be zero
     for (int i = 0; i < scores_counter-1; i++)
     {
@@ -241,18 +231,46 @@ void print_TopPlayers()
         }
     }
     mergeSort(TopPlayers,0,scores_counter-1);
+}
+int get_rank()
+{
+    removeDublicates();
+    int rank;
+    for (int i = 0; i < scores_counter-1; i++)
+    {
+        if (strcasecmp(winner.name,TopPlayers[i].name)==0)
+        {
+            rank = i + 1;
+            break;
+        }
+    }
+    return rank;
+}
+void print_TopPlayers()
+{
+    int size = scores_counter-1;
+    removeDublicates();
     if (HIGHSCORES < scores_counter-1)
     {
         size = HIGHSCORES;
     }
-    printf("  Player \tScore\n");
+    printf("  Player\tScore\n");
     for (int i = 0; i < size; i++)
     {
+        if (TopPlayers[i].symbol=='X')
+        {
+            printf("%s", RED);
+        }
+        else
+        {
+            printf("%s", YELLOW);
+        }
         if (TopPlayers[i].score)
         {
-            printf("%d. %s \t%d\n", i+1, TopPlayers[i].name, TopPlayers[i].score);
+            printf("%d. %s (%c) %d\n", i+1, TopPlayers[i].name, TopPlayers[i].symbol, TopPlayers[i].score);
         }
     }
+    printf("%s", WHITE);
 }
 char board[MAX_LEN][MAX_LEN];
 int moves[MAX_LEN*MAX_LEN];
@@ -272,46 +290,36 @@ Time Timer()
     Time result = split_time(difftime(time_end,time_start));
     return result;
 }
-void Save ()
+int lowest_row(int col)
 {
-    typedef struct
+    int row = -1;
+    for (int i = ROWS-1; i >= 0; i--)
     {
-        int moves_num;
-        int moves[MAX_LEN];
-        char Board[ROWS][COLS];
-    }games;
-    games tempBoard;
-    tempBoard.moves_num = moves_counter;
-    for (int i = 0; i < moves_counter; i++)
-    {
-        tempBoard.moves[i]=moves[i];
-    }
-    
-    FILE * savedGames = fopen("savedGames.bin","ab");
-    for (int i = 0; i < ROWS; i++)
-    {
-        for (int j = 0; j < COLS; j++)
+        if (board[i][col]==' ')
         {
-            tempBoard.Board[i][j] = board[i][j];
-            if (tempBoard.Board[i][j] == ' ')
-            {
-                tempBoard.Board[i][j] == '^';
-            }
+            row = i;
+            break;
         }
     }
-    fwrite(&tempBoard,sizeof(tempBoard),1,savedGames);
+    return row;
+}
+void Save ()
+{
+    savegame.moves_num = moves_counter;
+    for (int i = 0; i < moves_counter; i++)
+    {
+        savegame.moves[i]=moves[i];
+    }
+    savegame.rows = ROWS;
+    savegame.cols = COLS;
+    
+    FILE * savedGames = fopen("SavedGames.bin","ab");
+    fwrite(&savegame,sizeof(savegame),1,savedGames);
     fclose(savedGames);
 }
 void Load()
 {
-    typedef struct
-    {
-        int moves_num;
-        int moves[MAX_LEN];
-        char Board[ROWS][COLS];
-    }games;
-    games savedboards[10];
-    FILE * savedGames = fopen("savedGames.bin","rb");
+    FILE * savedGames = fopen("SavedGames.bin","rb");
     if (savedGames==NULL)
     {
         printf("No Saved Games starting a New One\n");
@@ -322,7 +330,6 @@ void Load()
                 board[i][j]=' ';
             }
         }
-
     }
     else
     {
@@ -337,7 +344,7 @@ void Load()
         if (boards_counter > 6)
         {
             int s = boards_counter-1;
-            FILE * savedGames = fopen("savedGames.bin","wb");
+            FILE * savedGames = fopen("SavedGames.bin","wb");
             for (int i = s-5; i < s; i++)
             {
                 fwrite(&savedboards[i],sizeof(savedboards[i]),1,savedGames);
@@ -367,20 +374,27 @@ void Load()
         {
             moves[i] = savedboards[gameNum].moves[i];
         }
+        ROWS = savedboards[gameNum].rows;
+        COLS = savedboards[gameNum].cols;
         for (int i = 0; i < ROWS; i++)
         {
             for (int j = 0; j < COLS; j++)
             {
-                board[i][j] = savedboards[gameNum].Board[i][j];
-                if (board[i][j] == '^')
-                {
-                    board[i][j] = ' ';
-                }
-            
+                board[i][j]=' ';
+            }
+        }
+        for (int i = 0; i < moves_counter; i++)
+        {
+            if (i%2==0)
+            {
+                board[lowest_row(moves[i])][moves[i]] = 'X';
+            }
+            else
+            {
+                board[lowest_row(moves[i])][moves[i]] = 'O';
             }
         }
     }
-
 }
 void print_board()
 {
@@ -431,19 +445,6 @@ int countns(int base,int count)
     {
         return 0;
     }
-}
-int lowest_row(int col)
-{
-    int row = -1;
-    for (int i = ROWS-1; i >= 0; i--)
-    {
-        if (board[i][col]==' ')
-        {
-            row = i;
-            break;
-        }
-    }
-    return row;
 }
 int Score(int base, char player)
 {
@@ -626,12 +627,14 @@ int ScoreX_At2Points(int base, int col1)
 void print_Fscore(int mode)
 {
     winner.score = 0;
-    printf("\n%sPlayer1's Final Score : %d%s\n", RED, Score(4,'X'), WHITE);
-    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, Score(4,'O'), WHITE);
+    player1.score = Score(4,'X');
+    player2.score = Score(4,'O');
+    printf("\n%sPlayer1's Final Score : %d%s\n", RED, player1.score, WHITE);
+    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, player2.score, WHITE);
     if (Score(4,'X')>Score(4,'O'))
     {
         printf("%sPlayer1 is the WINNER%s\n", RED, WHITE);
-        winner.score = Score(4,'X');
+        winner = player1;
         printf("Player1 Enter you name, please: ");
     }
     else if (Score(4,'X')<Score(4,'O'))
@@ -639,7 +642,7 @@ void print_Fscore(int mode)
         printf("%sPlayer2 is the WINNER%s\n", YELLOW, WHITE);
         if (mode)
         {
-            winner.score = Score(4,'O');
+            winner = player2;
             printf("Player2 Enter you name, please: ");
         }
     }
@@ -653,7 +656,7 @@ void print_Fscore(int mode)
         read_scores();
         int rank = get_rank();
         printf("your rank is %d\n",rank);
-        if (rank < HIGHSCORES)
+        if (rank <= HIGHSCORES)
         {
             print_TopPlayers();
         }
