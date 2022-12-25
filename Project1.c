@@ -11,6 +11,7 @@
 #define YELLOW "\033[0;33m"
 #define GREEN "\033[0;32m"
 #define WHITE "\033[0;37m"
+#define PURPLE "\033[0;35m"
 #define MAX_LEN 10000
 int ROWS, COLS, HIGHSCORES;
 typedef struct
@@ -99,18 +100,27 @@ void XML()
     char width_s[]="<width>"; char width_e[]="</width>";
     char highscores_s[]="<highscores>"; char highscores_e[]="</highscores>";
     FILE* xml_file= fopen("parameters.xml", "r");
-    int tries = 3;
+    int tries = 3;char config_content[MAX_LEN];
     if (!(xml_file == NULL))
     {
         ReadXML(xml_file);
         fclose(xml_file);
-        ROWS = bring_parameter(height_s, height_e,xml_content);
-        COLS = bring_parameter(width_s, width_e,xml_content);
-        HIGHSCORES = bring_parameter(highscores_s, highscores_e,xml_content);
+        int config_content_S = word_in_text(configurations_s,xml_content);
+        int config_content_E = word_in_text(configurations_e,xml_content);
+        if ((config_content_S != -1)&&(config_content_E != -1))
+        {
+            for (int i = config_content_S; i < config_content_E; i++)
+        {
+            config_content[i] = xml_content[i];
+        }
+        }
+        ROWS = bring_parameter(height_s, height_e,config_content);
+        COLS = bring_parameter(width_s, width_e,config_content);
+        HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
     }
     while (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries)) 
     {
-        printf("%sFile error, Please Enter the correct file path with a valid parameters: %s", RED, WHITE);
+        printf(RED"File error, Please Enter the correct file path with a valid parameters: "WHITE);
         char path[MAX_LEN];
         scanf("%s",path);
         getchar();
@@ -122,19 +132,18 @@ void XML()
         }
         ReadXML(xml_file);
         fclose(xml_file);
-        ROWS = bring_parameter(height_s, height_e,xml_content);
-        COLS = bring_parameter(width_s, width_e,xml_content);
-        HIGHSCORES = bring_parameter(highscores_s, highscores_e,xml_content);
-        printf("%d %d %d \n\n",ROWS,COLS,HIGHSCORES);
+        ROWS = bring_parameter(height_s, height_e,config_content);
+        COLS = bring_parameter(width_s, width_e,config_content);
+        HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
         tries--;
     }
     if (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries == 0))
     {
-        ROWS = 6;
+        ROWS = 9;
         COLS = 7;
         HIGHSCORES = 10;
-        printf("%sFailed 3 times Loading the defaults%s\n", RED, WHITE);
-        printf("Height = 6\nWidth = 7\nHighscores = 10\n");
+        printf(RED"Failed 3 times Loading the defaults%s\n");
+        printf(GREEN"Height = 9\nWidth = 7\nHighscores = 10\n"WHITE);
     }
 }
 //Sorting the Top Players list descending by MergeSort
@@ -204,7 +213,7 @@ void read_scores()
     FILE * scores_file = fopen("hScores.txt", "rb");
     if (scores_file == NULL)
     {
-        printf("NO Highscores yet\n");
+        printf(RED"NO Highscores yet\n"WHITE);
     }
     else
     {
@@ -259,18 +268,18 @@ void print_TopPlayers()
     {
         if (TopPlayers[i].symbol=='X')
         {
-            printf("%s", RED);
+            printf(RED);
         }
         else
         {
-            printf("%s", YELLOW);
+            printf(YELLOW);
         }
         if (TopPlayers[i].score)
         {
             printf("%d. %s (%c) %d\n", i+1, TopPlayers[i].name, TopPlayers[i].symbol, TopPlayers[i].score);
         }
     }
-    printf("%s", WHITE);
+    printf(WHITE);
 }
 char board[MAX_LEN][MAX_LEN];
 int moves[MAX_LEN*MAX_LEN];
@@ -322,7 +331,7 @@ void Load()
     FILE * savedGames = fopen("SavedGames.bin","rb");
     if (savedGames==NULL)
     {
-        printf("No Saved Games starting a New One\n");
+        printf(RED"No Saved Games starting a New One\n"WHITE);
         for (int i = 0; i < ROWS; i++)
         {
             for (int j = 0; j < COLS; j++)
@@ -352,7 +361,7 @@ void Load()
             fclose(savedGames);
         }
         
-        printf("Choose Game number from 1 to %d: ",boards_counter-1);
+        printf(GREEN"Choose Game number from 1 to %d: "WHITE,boards_counter-1);
         char game_num[MAX_LEN];
         int gameNum;
         fgets(game_num, MAX_LEN, stdin);
@@ -364,9 +373,10 @@ void Load()
         {
             while (!((atoi(game_num) > 0) && (atoi(game_num) < boards_counter)))
             {
-                printf("Enter valid game number: ");
+                printf(RED"Enter valid game number: ");
                 fgets(game_num, MAX_LEN, stdin);
             }
+            printf(WHITE);
             gameNum = atoi(game_num)-1;
         }
         moves_counter = savedboards[gameNum].moves_num;
@@ -385,7 +395,7 @@ void Load()
         }
         for (int i = 0; i < moves_counter; i++)
         {
-            if (i%2==0)
+            if ( i % 2 == 0)
             {
                 board[lowest_row(moves[i])][moves[i]] = 'X';
             }
@@ -398,7 +408,7 @@ void Load()
 }
 void print_board()
 {
-    printf("%s",BLUE);
+    printf(BLUE);
     if (COLS<10)
     {
         printf(" ");
@@ -421,19 +431,18 @@ void print_board()
             //Change Color according to the Player
             if (board[i][j]=='X')
             {
-                printf("%s",RED);
+                printf(RED);
             }
             else if (board[i][j]=='O')
             {
-                printf("%s", YELLOW);
+                printf(YELLOW);
             }
             printf(" %c ",board[i][j]);
-            printf("%s",BLUE);
+            printf(BLUE);
         }
         printf("|\n");
     }
-    //Back White
-    printf("%s", WHITE);
+    printf(WHITE);
 }
 int countns(int base,int count)
 {
@@ -629,25 +638,25 @@ void print_Fscore(int mode)
     winner.score = 0;
     player1.score = Score(4,'X');
     player2.score = Score(4,'O');
-    printf("\n%sPlayer1's Final Score : %d%s\n", RED, player1.score, WHITE);
-    printf("%sPlayer2's Final Score : %d%s\n", YELLOW, player2.score, WHITE);
+    printf(RED"\nPlayer1's Final Score : %d\n"WHITE,player1.score);
+    printf(YELLOW"Player2's Final Score : %d\n"WHITE, player2.score);
     if (Score(4,'X')>Score(4,'O'))
     {
-        printf("%sPlayer1 is the WINNER%s\n", RED, WHITE);
+        printf(RED"Player1 is the WINNER\n");
         winner = player1;
-        printf("Player1 Enter you name, please: ");
+        printf(GREEN"Player1 Enter you name, please: "WHITE);
     }
     else if (Score(4,'X')<Score(4,'O'))
     {
-        printf("%sPlayer2 is the WINNER%s\n", YELLOW, WHITE);
+        printf(YELLOW"Player2 is the WINNER\n"WHITE);
         if (mode)
         {
             winner = player2;
-            printf("Player2 Enter you name, please: ");
+            printf(GREEN"Player2 Enter you name, please: "WHITE);
         }
     }
     else
-        printf("EVEN\n");
+        printf(RED"EV"YELLOW"EN\n"WHITE);
     if (winner.score)
     {
         gets(winner.name);
@@ -655,7 +664,7 @@ void print_Fscore(int mode)
         addWinnerTofile();
         read_scores();
         int rank = get_rank();
-        printf("your rank is %d\n",rank);
+        printf(GREEN"your rank is %d\n"WHITE,rank);
         if (rank <= HIGHSCORES)
         {
             print_TopPlayers();
@@ -691,9 +700,13 @@ int case_To_num(char c[])   //turn the char that user enter to number like redo,
     {
         col = -10;
     }
-     else if ((c[0]=='s')||(c[0]=='S'))
+    else if ((c[0]=='s')||(c[0]=='S'))
     {
         col = -15;
+    }
+    else if ((c[0]=='e')||(c[0]=='E'))
+    {
+        col = -20;
     }
     else
     {
@@ -732,22 +745,22 @@ void Redo(int mode)
 int game_mode()
 {
     int mode;
-    printf("%sFor Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n", GREEN);
+    printf(GREEN"For Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n");
     char g_mode[MAX_LEN];
     fgets(g_mode,sizeof(g_mode),stdin);
     if (atoi(g_mode)==1)
     {
-        printf("Human Vs Computer\n%s", WHITE);
+        printf("Human Vs Computer\n"WHITE);
         mode = 0;
     }
     else if (atoi(g_mode)==2)
     {
-        printf("Human Vs Human\n%s", WHITE);
+        printf("Human Vs Human\n"WHITE);
         mode = 1;
     }
     else
     {
-        printf("%sError Try Again\n", RED);
+        printf(RED"Error Try Again\n");
         game_mode();
     }
     return mode;
@@ -755,27 +768,27 @@ int game_mode()
 int game_level()
 {
     int level;
-    printf("%sEasy Mode :Enter 1\nMedium Mode :Enter 2\nHard Mode :Enter 3\n", GREEN);
+    printf(GREEN"Easy Mode :Enter 1\nMedium Mode :Enter 2\nHard Mode :Enter 3\n");
     char g_level[MAX_LEN];
     fgets(g_level,sizeof(g_level),stdin);
     if (atoi(g_level)==1)
     {
-        printf("Easy Mode\n%s", WHITE);
+        printf("Easy Mode\n"WHITE);
         level = 0;
     }
     else if (atoi(g_level)==2)
     {
-        printf("Medium Mode\n%s", WHITE);
+        printf("Medium Mode\n"WHITE);
         level = 1;
     }
     else if (atoi(g_level)==3)
     {
-        printf("Hard Mode\n%s", WHITE);
+        printf("Hard Mode\n"WHITE);
         level = 2;
     }
     else
     {
-        printf("%sError Try Again\n", RED);
+        printf(RED"Error Try Again\n");
         game_level();
     }
     return level;
@@ -855,21 +868,21 @@ int choose(int mode,int level)
     }print_board();
     if (tempPlayer.number==1)
     {
-        printf("%s", RED);
+        printf(RED);
     }
     else
     {
-        printf("%s",YELLOW);
+        printf(YELLOW);
     }
 
-    printf("Player %d,Turn: %s",tempPlayer.number, WHITE);
+    printf("Player %d,Turn: "WHITE,tempPlayer.number );
     if ((mode )||(moves_counter%2==0))
     {
         int col = take_column(choice);
             while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
         {
             print_board();
-            printf("%sError Enter a valid column:%s ", RED, WHITE);
+            printf(RED"Error Enter a valid column: "WHITE);
             col = take_column(choice);
         }
         if (col==-5)
@@ -884,7 +897,7 @@ int choose(int mode,int level)
             }
             else
             {
-                printf("\n%sNo Redo this the last move%s\n", RED, WHITE);
+                printf(RED"\nNo Redo this the last move\n"WHITE);
                 choose(mode,level);
             }
         }
@@ -915,13 +928,13 @@ int Moves(char player)
 }
 void print_game_data()
 {
-    printf("\n%s%d:%d:%d%s", GREEN, timer.hours, timer.minutes, timer.seconds, WHITE);
-    printf("\n%sPlayer1 score: %d\t%sPlayer2 score: %d%s\n", RED, Score(4,'X'), YELLOW, Score(4,'O'), WHITE);
-    printf("%sPlayer1 moves: %d\t%sPlayer2 moves: %d%s\n\n", RED, Moves('X'), YELLOW, Moves('O'), WHITE);
+    printf(GREEN"\n%d:%d:%d%s", timer.hours, timer.minutes, timer.seconds);
+    printf(RED"\nPlayer1 score: %d\t"YELLOW"Player2 score: %d\n", Score(4,'X'), Score(4,'O'));
+    printf(RED"Player1 moves: %d\t"YELLOW"Player2 moves: %d\n\n"WHITE, Moves('X'), Moves('O'));
 }
 int MainMenu()
 {
-    printf("%sStart New Game: 1\n", GREEN);
+    printf(GREEN"Start New Game: 1\n");
     printf("Load Game: 2\n");
     printf("Top Players: 3\n");
     printf("Quit: 4\n");
@@ -929,29 +942,29 @@ int MainMenu()
     fgets(option, MAX_LEN, stdin);
     if ((atoi(option) < 5) && (atoi(option)))
     {
-        printf("%s", WHITE);
+        printf(WHITE);
         return atoi(option);
     }
     else
     {
-        printf("%sError enter a valid option!\n", RED);
+        printf(RED"Error enter a valid option!\n");
         return MainMenu();
     }
 }
 int BackToMain()
 {
-    printf("%sBack to Main Menu: 1\n", GREEN);
+    printf(GREEN"Back to Main Menu: 1\n");
     printf("Quit: 2\n");
     char option[MAX_LEN];
     fgets(option, MAX_LEN, stdin);
     if (atoi(option) == 1)
     {
-        printf("%s", WHITE);
+        printf(WHITE);
         MainMenu();
     }
-    else if (atoi(option) == 0)
+    else if ((atoi(option) == 0)||(atoi(option) > 2))
     {
-        printf("%sError enter a valid option!\n", RED);
+        printf(RED"Error enter a valid option!\n");
         return BackToMain();
     }
     else
@@ -992,22 +1005,28 @@ int main() {
                 level = game_level();
             }
             time(&time_start);
-            int save_game = 0;
+            int end_game = 0;
             while (not_full())
             {
                 system(" ");
-                save_game = choose(mode,level);
+                printf(PURPLE"\nChoose Number Of The Column Or\n( 'U' for Undo / 'R' for Redo / 'S' for Save / 'E' for Exit )\n"WHITE);
+                end_game = choose(mode,level);
                 timer = Timer();
                 print_game_data();
                 tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
-                if(save_game==-15)
+                if(end_game ==-15)
                 {
                     Save();
-                    printf("game saved\n");
+                    printf(GREEN"Game Saved\n");
+                    /*break;*/
+                }
+                if(end_game ==-20)
+                {
+                    printf(GREEN"Ending Game\n");
                     break;
                 }
             }
-            if (save_game != -15)
+            if ((end_game != -15)&&(end_game != -20))
             {
                 print_board();
                 print_Fscore(mode);
@@ -1021,6 +1040,6 @@ int main() {
         moves_counter = moves_counter2 = 0;
         option = BackToMain();
     }
-    printf("%s", WHITE);
+    printf(WHITE);
     return 0;
 }
