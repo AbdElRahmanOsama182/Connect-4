@@ -31,16 +31,17 @@ typedef struct
 Time timer;
 time_t time_start,time_end;
 typedef struct
-    {
-        int rows;
-        int cols;
-        int moves_num;
-        int moves[MAX_LEN];
-    }games;
-    games savegame, savedboards[10];
+{
+    int rows;
+    int cols;
+    int moves_num;
+    int moves[MAX_LEN];
+}games;
+games savegame, savedboards[10];
 int word_in_text(char word[],char text[])
 {
-    int found = -1;int i = 0;
+    int found = -1;
+    int i = 0;
     while (text[i]!='\0')
     {
         int j = 0;
@@ -76,47 +77,48 @@ int bring_parameter(char start[],char end[],char text[])
             temp[i] = text[s+i];
         }
         parameter = atoi(temp);
-        }
+    }
     return parameter;
 }
 char xml_content[MAX_LEN];
 void ReadXML(FILE* xml_file)
 {
-    int i = 0;
-    while (!feof(xml_file))
-        {
-            char temp = fgetc(xml_file);
-            if ((temp!=' ')&&(temp!='\t')&&(temp!='\n'))
-            {
-                xml_content[i] = temp;
-                i++;
-            }
-        }
-}
-void XML()
-{
+    char config_content[MAX_LEN];
     char configurations_s[]="<configurations>"; char configurations_e[]="</configurations>";
     char height_s[]="<height>"; char height_e[]="</height>";
     char width_s[]="<width>"; char width_e[]="</width>";
     char highscores_s[]="<highscores>"; char highscores_e[]="</highscores>";
+    int i = 0;
+    while (!feof(xml_file))
+    {
+        char temp = fgetc(xml_file);
+        if ((temp!=' ')&&(temp!='\t')&&(temp!='\n'))
+        {
+            xml_content[i] = temp;
+            i++;
+        }
+    }
+    int config_content_S = word_in_text(configurations_s,xml_content);
+    int config_content_E = word_in_text(configurations_e,xml_content);
+    if ((config_content_S != -1)&&(config_content_E != -1))
+    {
+        for (int i = config_content_S; i < config_content_E; i++)
+        {
+            config_content[i] = xml_content[i];
+        }
+    }
+    ROWS = bring_parameter(height_s, height_e,config_content);
+    COLS = bring_parameter(width_s, width_e,config_content);
+    HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
+}
+void XML()
+{
     FILE* xml_file= fopen("parameters.xml", "r");
-    int tries = 3;char config_content[MAX_LEN];
+    int tries = 3; char config_content[MAX_LEN];
     if (!(xml_file == NULL))
     {
         ReadXML(xml_file);
         fclose(xml_file);
-        int config_content_S = word_in_text(configurations_s,xml_content);
-        int config_content_E = word_in_text(configurations_e,xml_content);
-        if ((config_content_S != -1)&&(config_content_E != -1))
-        {
-            for (int i = config_content_S; i < config_content_E; i++)
-        {
-            config_content[i] = xml_content[i];
-        }
-        }
-        ROWS = bring_parameter(height_s, height_e,config_content);
-        COLS = bring_parameter(width_s, width_e,config_content);
-        HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
     }
     while (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries)) 
     {
@@ -132,9 +134,6 @@ void XML()
         }
         ReadXML(xml_file);
         fclose(xml_file);
-        ROWS = bring_parameter(height_s, height_e,config_content);
-        COLS = bring_parameter(width_s, width_e,config_content);
-        HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
         tries--;
     }
     if (((xml_file == NULL) || (ROWS <= 0) || (COLS <= 0) || (HIGHSCORES <= 0)) && (tries == 0))
@@ -142,7 +141,7 @@ void XML()
         ROWS = 9;
         COLS = 7;
         HIGHSCORES = 10;
-        printf(RED"Failed 3 times Loading the defaults%s\n");
+        printf(RED"Failed 3 times!\nLoading the defaults....\n");
         printf(GREEN"Height = 9\nWidth = 7\nHighscores = 10\n"WHITE);
     }
 }
@@ -312,6 +311,16 @@ int lowest_row(int col)
     }
     return row;
 }
+void NewBoard()
+{
+    for (int i = 0; i < ROWS; i++)
+    {
+        for (int j = 0; j < COLS; j++)
+        {
+            board[i][j]=' ';
+        }
+    }
+}
 void Save ()
 {
     savegame.moves_num = moves_counter;
@@ -332,13 +341,7 @@ void Load()
     if (savedGames==NULL)
     {
         printf(RED"No Saved Games starting a New One\n"WHITE);
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                board[i][j]=' ';
-            }
-        }
+        NewBoard();
     }
     else
     {
@@ -386,13 +389,7 @@ void Load()
         }
         ROWS = savedboards[gameNum].rows;
         COLS = savedboards[gameNum].cols;
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                board[i][j]=' ';
-            }
-        }
+        NewBoard();
         for (int i = 0; i < moves_counter; i++)
         {
             if ( i % 2 == 0)
@@ -857,31 +854,25 @@ void Computer_Play(int level)
     }
 }
 int choose(int mode,int level)
-{ char choice[MAX_LEN];
+{
+    char choice[MAX_LEN];
+    print_board();
     if (moves_counter%2==0)
     {
         tempPlayer = player1;
-    }
-    else
-    {
-        tempPlayer = player2;
-    }print_board();
-    if (tempPlayer.number==1)
-    {
         printf(RED);
     }
     else
     {
+        tempPlayer = player2;
         printf(YELLOW);
     }
-
     printf("Player %d,Turn: "WHITE,tempPlayer.number );
-    if ((mode )||(moves_counter%2==0))
+    if (( mode )||( moves_counter%2==0 ))
     {
         int col = take_column(choice);
-            while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
+        while ((((col > -1) && (col < COLS)) && (board[0][col]!=' '))||(col>=COLS)||(col==-1))
         {
-            print_board();
             printf(RED"Error Enter a valid column: "WHITE);
             col = take_column(choice);
         }
@@ -901,6 +892,12 @@ int choose(int mode,int level)
                 choose(mode,level);
             }
         }
+        if (col==-15)
+        {
+            Save();
+            printf(GREEN"Game Saved\n"WHITE);
+        }
+        
         else if (col < COLS && col >= 0 && (board[0][col]==' '))
         {
             board[lowest_row(col)][col] = tempPlayer.symbol;
@@ -930,7 +927,7 @@ void print_game_data()
 {
     printf(GREEN"\n%d:%d:%d%s", timer.hours, timer.minutes, timer.seconds);
     printf(RED"\nPlayer1 score: %d\t"YELLOW"Player2 score: %d\n", Score(4,'X'), Score(4,'O'));
-    printf(RED"Player1 moves: %d\t"YELLOW"Player2 moves: %d\n\n"WHITE, Moves('X'), Moves('O'));
+    printf(RED"Player1 moves: %d\t"YELLOW"Player2 moves: %d\n"WHITE, Moves('X'), Moves('O'));
 }
 int MainMenu()
 {
@@ -972,32 +969,17 @@ int BackToMain()
         return 4;
     }
 }
-int main() {
-    //Player1                  //Player2
-    player1.number = 1 ;       player2.number = 2;
-    player1.symbol = 'X';      player2.symbol = 'O';
-    tempPlayer = player1;
-    int option = MainMenu();
-    while (option != 4)
+void Play(int option)
+{
+    if (option < 4)
     {
         XML();
-        if (option != 3)
+        if (option < 3)
         {
-            if ( option == 1)
-            {
-                for (int i = 0; i < ROWS; i++)
-                {
-                    for (int j = 0; j < COLS; j++)
-                    {
-                        board[i][j]=' ';
-                    }
-                }
-            }
-            else if (option == 2)
-            {
+            if (option == 1)
+                NewBoard();
+            else
                 Load();
-            }
-            
             int mode = game_mode();
             int level = 0;
             if (!mode)
@@ -1009,17 +991,11 @@ int main() {
             while (not_full())
             {
                 system(" ");
-                printf(PURPLE"\nChoose Number Of The Column Or\n( 'U' for Undo / 'R' for Redo / 'S' for Save / 'E' for Exit )\n"WHITE);
+                printf(PURPLE"\nChoose Number Of The Column Or\n");
+                printf("( 'U' for Undo / 'R' for Redo / 'S' for Save / 'E' for Exit )\n"WHITE);
                 end_game = choose(mode,level);
                 timer = Timer();
                 print_game_data();
-                tempPlayer = (tempPlayer.number == 1) ? player2 : player1;
-                if(end_game ==-15)
-                {
-                    Save();
-                    printf(GREEN"Game Saved\n");
-                    /*break;*/
-                }
                 if(end_game ==-20)
                 {
                     printf(GREEN"Ending Game\n");
@@ -1037,9 +1013,16 @@ int main() {
             read_scores();
             print_TopPlayers();
         }
-        moves_counter = moves_counter2 = 0;
-        option = BackToMain();
+    moves_counter = moves_counter2 = 0;
+    return Play(BackToMain());
     }
     printf(WHITE);
+}
+int main() {
+    //Player1                  //Player2
+    player1.number = 1 ;       player2.number = 2;
+    player1.symbol = 'X';      player2.symbol = 'O';
+    tempPlayer = player1;
+    Play(MainMenu());
     return 0;
 }
