@@ -45,9 +45,9 @@ int word_in_text(char word[],char text[])
     while (text[i]!='\0')
     {
         int j = 0;
-        if (tolower(text[i])==word[j])
+        if (text[i]==word[j])
         {
-            while ((tolower(text[i+j]) == word[j]) && (word[j] != '\0'))
+            while ((text[i+j] == word[j]) && (word[j] != '\0'))
             {
                 j++;
             }
@@ -84,10 +84,10 @@ char xml_content[MAX_LEN];
 void ReadXML(FILE* xml_file)
 {
     char config_content[MAX_LEN];
-    char configurations_s[]="<configurations>"; char configurations_e[]="</configurations>";
-    char height_s[]="<height>"; char height_e[]="</height>";
-    char width_s[]="<width>"; char width_e[]="</width>";
-    char highscores_s[]="<highscores>"; char highscores_e[]="</highscores>";
+    char configurations_s[]="<Configurations>"; char configurations_e[]="</Configurations>";
+    char height_s[]="<Height>"; char height_e[]="</Height>";
+    char width_s[]="<Width>"; char width_e[]="</Width>";
+    char highscores_s[]="<Highscores>"; char highscores_e[]="</Highscores>";
     int i = 0;
     while (!feof(xml_file))
     {
@@ -475,7 +475,6 @@ int Score(int base, char player)
             {
                 score += countns(base,count);
             }
-
         }
     }
     //Vertical
@@ -500,15 +499,16 @@ int Score(int base, char player)
         }
     }
     //Diagonal '\' Left to Right
-    for (int s = 0; s < COLS-3; s++)
+    for (int s = -COLS+1; s < ROWS; s++)
     {
         int count = 0;
         for (int i = 0; i < ROWS; i++)
         {
-            if (i+s >=COLS)
+            if ((i+s >=COLS)||(i<0))
             {
                 score += countns(base,count);
-                break;
+                count = 0;
+                continue;
             }
             if (board[i][i+s] == player)
             {
@@ -525,43 +525,18 @@ int Score(int base, char player)
             }
         }
     }
-    for (int s = 1; s < ROWS-3; s++)
-    {
-        int count = 0;
-        for (int i = 0; i < COLS; i++)
-        {
-            if (i+s >= ROWS)
-            {
-                score += countns(base,count);
-                break;
-            }
-            if (board[i+s][i] == player)
-            {
-                count++;
-            }
-            else if (i < COLS-1)
-            {
-                score += countns(base,count);
-                count = 0;
-            }
-            if (i == COLS-1)
-            {
-                score += countns(base,count);
-            }
-        }
-    }
     //Diagonal '/' Right to Left
-    for (int s = COLS-1; s > 2; s--)
+    for (int s = 0; s < ROWS+COLS-1; s++)
     {
         int count = 0;
         for (int i = 0; i < ROWS; i++)
         {
-            if (s-i < 0)
+            if ((s-i >= COLS)||(s-i < 0))
             {
                 score += countns(base,count);
-                break;
+                count = 0;
+                continue;
             }
-
             if (board[i][s-i] == player)
             {
                 count++;
@@ -572,32 +547,6 @@ int Score(int base, char player)
                 count = 0;
             }
             if (i == ROWS-1)
-            {
-                score += countns(base,count);
-            }
-        }
-    }
-    for (int s = 1; s < ROWS-3; s++)
-    {
-        int count = 0;
-        for (int i = 0; i < COLS; i++)
-        {
-            if (s+i >= ROWS)
-            {
-                score += countns(base,count);
-                break;
-            }
-
-            if (board[s+i][COLS-1-i] == player)
-            {
-                count++;
-            }
-            else if (i < COLS-1)
-            {
-                score += countns(base,count);
-                count = 0;
-            }
-            if (i == COLS-1)
             {
                 score += countns(base,count);
             }
@@ -878,7 +827,15 @@ int choose(int mode,int level)
         }
         if (col==-5)
         {
-            Undo(mode);
+            if (moves_counter == 0)
+            {
+                printf(RED"\nThis is the first move No moves to Undo\n"WHITE);
+                choose(mode,level);
+            }
+            else
+            {
+                Undo(mode);
+            }
         }
         else if (col==-10)
         {
@@ -892,12 +849,11 @@ int choose(int mode,int level)
                 choose(mode,level);
             }
         }
-        if (col==-15)
+        else if (col==-15)
         {
             Save();
             printf(GREEN"Game Saved\n"WHITE);
         }
-        
         else if (col < COLS && col >= 0 && (board[0][col]==' '))
         {
             board[lowest_row(col)][col] = tempPlayer.symbol;
@@ -1002,7 +958,7 @@ void Play(int option)
                     break;
                 }
             }
-            if ((end_game != -15)&&(end_game != -20))
+            if (end_game != -20)
             {
                 print_board();
                 print_Fscore(mode);
