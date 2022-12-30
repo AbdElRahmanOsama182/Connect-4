@@ -1,7 +1,7 @@
 #ifndef TIME
 #define TIME
 #include "Global.h"
-//Spliting time into  minutes and seconds.
+//Spliting time into hours, minutes and seconds.
 Time split_time( long int s)
 {
     Time result;
