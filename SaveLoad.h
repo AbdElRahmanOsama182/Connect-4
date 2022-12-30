@@ -115,6 +115,7 @@ void Load()
             gameNum = strToint(game_num)-1;
         }
         moves_counter = savedboards[gameNum].moves_num;
+        moves_counter2 = moves_counter;
         for (int i = 0; i < moves_counter; i++)
         {
             moves[i] = savedboards[gameNum].moves[i];
