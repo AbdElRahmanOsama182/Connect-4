@@ -11,7 +11,7 @@ void Play(int option)
         {
             if (option == 1)
             {
-                printf("Statrting a New Game\n");
+                printf("Starting a New Game\n");
                 NewBoard();
             }
             else
