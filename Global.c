@@ -10,7 +10,6 @@ typedef struct
 Player player1,player2,tempPlayer,winner,TopPlayers[MAX_LEN];
 typedef struct
 {
-    int hours;
     int minutes;
     int seconds;
 }Time;
@@ -21,6 +20,7 @@ typedef struct
     int rows;
     int cols;
     int moves_num;
+    char name[100];
     int moves[MAX_LEN];
 }games;
 games savegame, savedboards[10];
