@@ -130,7 +130,10 @@ void print_TopPlayers()
     {
         size = paramrters.HIGHSCORES;
     }
-    printf("  Player\tScore\n");
+    if (size>0)
+    {
+        printf("  Player\tScore\n");
+    }
     for (int i = 0; i < size; i++)
     {
         if (TopPlayers[i].symbol=='X')
