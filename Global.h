@@ -25,7 +25,6 @@ typedef struct
 }Player;
 typedef struct
 {
-    int hours;
     int minutes;
     int seconds;
 }Time;
