@@ -1,6 +1,7 @@
 #ifndef CHOOSE
 #define CHOOSE
 #include "Global.h"
+//return 1 Only when Only The Wanted Character But No Others (Ignoing Spaces)
 int CharInText(char c,char text[])
 {
     int found = 0;
@@ -22,6 +23,7 @@ int CharInText(char c,char text[])
     }
     return found;
 }
+//Turning Character To The Chosen Option
 int case_To_num(char c[])
 {
     int col;
@@ -55,11 +57,13 @@ int case_To_num(char c[])
     }
     return col;
 }
+//Take Column From User
 int take_column(char c[])
 {
     fgets(c, MAX_LEN, stdin);
     return case_To_num(c);
 }
+//Excuting The Option User has Chosen
 int choose(int mode,int level)
 {
     char choice[MAX_LEN];
