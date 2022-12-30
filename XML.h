@@ -1,7 +1,7 @@
 #ifndef Xml
 #define Xml
 #include "Global.h"
-//Turning String Into Intiger
+//Turning String Into Integer
 int strToint(char c[])
 {
     int result = 0;
@@ -44,7 +44,7 @@ int word_in_text(char word[],char text[])
     }
     return found;
 }
-//Bringin The Parameters If Exists And Ignoring All White Spaces
+//Bringing The Parameters If Exists And Ignoring All White Spaces
 int bring_parameter(char start[],char end[],char text[])
 {
     int s = word_in_text(start,text)+strlen(start);

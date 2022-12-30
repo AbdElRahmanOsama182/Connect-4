@@ -6,7 +6,8 @@
 int game_mode()
 {
     int mode;
-    printf(GREEN"For Human Vs Computer :Enter 1\nFor Human Vs Human :Enter 2\n");
+    printf(GREEN"1. For Human Vs Computer\n2. For Human Vs Human\n");
+    printf("Enter the option number: ");
     char g_mode[MAX_LEN];
     fgets(g_mode,sizeof(g_mode),stdin);
     system("cls");
@@ -31,7 +32,8 @@ int game_mode()
 int game_level()
 {
     int level;
-    printf(GREEN"Easy Mode :Enter 1\nMedium Mode :Enter 2\nHard Mode :Enter 3\n");
+    printf(GREEN"1. Easy Mode\n2. Medium Mode\n3. Hard Mode\n");
+    printf("Enter the option number: ");
     char g_level[MAX_LEN];
     fgets(g_level,sizeof(g_level),stdin);
     system("cls");

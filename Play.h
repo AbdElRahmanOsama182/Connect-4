@@ -4,14 +4,17 @@
 //Bringing All The Functions Together And Controlling The Game Flow
 void Play(int option)
 {
-    if (option < 4)
+    if (option < 5)
     {
-        XML();
+        if (option < 4)
+        {
+            XML();
+        }
         if (option < 3)
         {
             if (option == 1)
             {
-                printf("Statrting a New Game\n");
+                printf(GREEN"Starting a New Game\n"WHITE);
                 NewBoard();
             }
             else
@@ -47,11 +50,16 @@ void Play(int option)
                 print_Fscore(mode);
             }
         }
-        else
+        else if (option == 3)
         {
             read_scores();
             print_TopPlayers();
         }
+        else
+        {
+            instructions();
+        }
+        
     moves_counter = moves_counter2 = 0;
     return Play(BackToMain());
     }
