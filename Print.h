@@ -68,6 +68,12 @@ void print_Fscore(int mode)
     {
         gets(winner.name);
         fflush(stdin);
+        while (winner.name[0]=='\0')
+        {
+            printf(GREEN"Enter you name, please: "WHITE);
+            gets(winner.name);
+            fflush(stdin);
+        }
         read_scores();
         addWinnerToList();
         addWinnerTofile();

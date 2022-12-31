@@ -21,11 +21,11 @@ int strToint(char c[])
     return result;
 }
 //Searching For The Tags In The Text
-int word_in_text(char word[],char text[])
+int word_in_text(int start, char word[],char text[],int end)
 {
     int found = -1;
-    int i = 0;
-    while (text[i]!='\0')
+    int i = start;
+    while (i<end)
     {
         int j = 0;
         if (text[i]==word[j])
@@ -44,13 +44,29 @@ int word_in_text(char word[],char text[])
     }
     return found;
 }
-//Bringing The Parameters If Exists And Ignoring All White Spaces
-int bring_parameter(char start[],char end[],char text[])
+int NumOfWordInText(int start, char word[],char text[],int end)
 {
-    int s = word_in_text(start,text)+strlen(start);
-    int e = word_in_text(end,text);
+    
+    int found = word_in_text(start, word, text, end);
+    if (found==-1)
+    {
+        return 0;
+    }
+    else
+    {
+        
+        return 1 + NumOfWordInText(found+strlen(word),  word, text, end);
+    }
+}
+//Bringing The Parameters If Exists And Ignoring All White Spaces
+int bring_parameter(char start[],char end[],char text[],int endConfig)
+{
+    int s = word_in_text(0,start,text,endConfig)+strlen(start);
+    int NumOfs = NumOfWordInText(0, start, text, endConfig);
+    int e = word_in_text(0,end,text,endConfig);
+    int NumOfe = NumOfWordInText(0, end, text, endConfig);
     int parameter;
-    if ((e == -1)||(s == -1)||(e-s <= 0))
+    if ((e == -1)||(s == -1)||(e-s <= 0)||(NumOfs!=NumOfe))
     {
         parameter = 0;
     }
@@ -83,9 +99,11 @@ void ReadXML(FILE* xml_file)
         i++;
     }
     char config_content[MAX_LEN];
-    int config_content_S = word_in_text(configurations_s,xml_content);
-    int config_content_E = word_in_text(configurations_e,xml_content);
-    if ((config_content_S != -1)&&(config_content_E != -1))
+    int config_content_S = word_in_text(0,configurations_s,xml_content,i);
+    int NumOfs = NumOfWordInText(0, configurations_s, xml_content, i);
+    int config_content_E = word_in_text(0,configurations_e,xml_content,i);
+    int NumOfe = NumOfWordInText(0, configurations_e, xml_content, i);
+    if ((config_content_S != -1)&&(config_content_E != -1)&&(NumOfs==NumOfe))
     {
         for (int i = config_content_S; i < config_content_E; i++)
         {
@@ -93,9 +111,9 @@ void ReadXML(FILE* xml_file)
             j++;
         }
     }
-    paramrters.ROWS = bring_parameter(height_s, height_e,config_content);
-    paramrters.COLS = bring_parameter(width_s, width_e,config_content);
-    paramrters.HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content);
+    paramrters.ROWS = bring_parameter(height_s, height_e,config_content,j);
+    paramrters.COLS = bring_parameter(width_s, width_e,config_content,j);
+    paramrters.HIGHSCORES = bring_parameter(highscores_s, highscores_e,config_content,j);
 }
 // If The File Is Not Valid Take The Path From User And Try 3 Times Or Load The Defaults
 void XML()
